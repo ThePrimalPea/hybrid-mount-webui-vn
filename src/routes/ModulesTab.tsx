@@ -187,7 +187,7 @@ export default function ModulesTab() {
                 onClick={() => setShowUnmounted(!showUnmounted())}
                 title={showUnmounted() ? "Hide unmounted" : "Show unmounted"}
                 type="button"
-                aria-pressed={showUnmounted()}
+                aria-pressed={showUnmounted() ? "true" : "false"}
               >
                 <svg viewBox="0 0 24 24" width="20" height="20">
                   <path
@@ -250,7 +250,9 @@ export default function ModulesTab() {
                       class="module-header"
                       onClick={() => toggleExpand(mod.id)}
                       type="button"
-                      aria-expanded={expandedId() === mod.id}
+                      aria-expanded={
+                        expandedId() === mod.id ? "true" : "false"
+                      }
                     >
                       <div class="module-info">
                         <div class="module-name">{mod.name}</div>
