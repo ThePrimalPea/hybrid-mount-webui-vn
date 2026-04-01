@@ -4,7 +4,7 @@
  */
 
 import { ParentProps } from "solid-js";
-import { createMemo, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 
 export default function BottomActions(props: ParentProps) {
@@ -23,7 +23,7 @@ export default function BottomActions(props: ParentProps) {
       },
       {
         root: rootEl,
-        threshold: [0.4, 0.6, 0.8],
+        threshold: [0.6],
       },
     );
 
@@ -35,12 +35,17 @@ export default function BottomActions(props: ParentProps) {
     const viewport = window.visualViewport;
     if (!viewport) return;
 
+    let rafId = 0;
     const updateKeyboardInset = () => {
-      const inset = Math.max(
-        0,
-        Math.round(window.innerHeight - viewport.height - viewport.offsetTop),
-      );
-      setKeyboardInset(inset);
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        const inset = Math.max(
+          0,
+          Math.round(window.innerHeight - viewport.height - viewport.offsetTop),
+        );
+        setKeyboardInset((prev) => (Math.abs(prev - inset) < 2 ? prev : inset));
+      });
     };
 
     updateKeyboardInset();
@@ -49,51 +54,30 @@ export default function BottomActions(props: ParentProps) {
     window.addEventListener("orientationchange", updateKeyboardInset);
 
     onCleanup(() => {
+      if (rafId) window.cancelAnimationFrame(rafId);
       viewport.removeEventListener("resize", updateKeyboardInset);
       viewport.removeEventListener("scroll", updateKeyboardInset);
       window.removeEventListener("orientationchange", updateKeyboardInset);
     });
   });
 
-  const bottomOffset = createMemo(() =>
-    keyboardInset() > 0
-      ? `${keyboardInset() + 16}px`
-      : "calc(var(--bottom-nav-height, 88px) + env(safe-area-inset-bottom, 0px))",
-  );
-
   return (
     <>
       <div class="bottom-actions-anchor" ref={anchorRef} aria-hidden="true" />
-      <Show when={isActivePage()}>
-        <Portal>
-          <div class="bottom-actions-root" style={{ bottom: bottomOffset() }}>
-            {props.children}
-            <style>
-              {`
-        .bottom-actions-root {
-          position: fixed;
-          left: 0;
-          right: 0;
-          display: flex;
-          align-items: center;
-          padding: 0 16px;
-          gap: 16px;
-          z-index: 90;
-          pointer-events: none;
-        }
-        .bottom-actions-root > * {
-          pointer-events: auto;
-        }
-        .bottom-actions-root > .spacer {
-          flex: 1;
-          pointer-events: none;
-          box-shadow: none;
-        }
-        `}
-            </style>
-          </div>
-        </Portal>
-      </Show>
+      <Portal>
+        <div
+          class="bottom-actions-root"
+          classList={{ "is-active": isActivePage() }}
+          style={{
+            bottom:
+              "calc(var(--bottom-nav-height, 88px) + env(safe-area-inset-bottom, 0px))",
+            transform: `translate3d(0, -${keyboardInset()}px, 0)`,
+          }}
+          aria-hidden={!isActivePage()}
+        >
+          {props.children}
+        </div>
+      </Portal>
     </>
   );
 }
