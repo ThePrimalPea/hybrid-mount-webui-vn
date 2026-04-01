@@ -4,13 +4,14 @@
  */
 
 import { ParentProps } from "solid-js";
-import { createSignal, onCleanup, onMount } from "solid-js";
+import { createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 
 export default function BottomActions(props: ParentProps) {
   const [isActivePage, setIsActivePage] = createSignal(true);
   const [keyboardInset, setKeyboardInset] = createSignal(0);
   let anchorRef: HTMLDivElement | undefined;
+  let rootRef: HTMLDivElement | undefined;
 
   onMount(() => {
     const pageEl = anchorRef?.closest(".swipe-page");
@@ -61,19 +62,24 @@ export default function BottomActions(props: ParentProps) {
     });
   });
 
+  createEffect(() => {
+    if (!rootRef) return;
+
+    rootRef.style.setProperty(
+      "--bottom-actions-keyboard-inset",
+      `${keyboardInset()}px`,
+    );
+    rootRef.toggleAttribute("inert", !isActivePage());
+  });
+
   return (
     <>
       <div class="bottom-actions-anchor" ref={anchorRef} aria-hidden="true" />
       <Portal>
         <div
+          ref={rootRef}
           class="bottom-actions-root"
           classList={{ "is-active": isActivePage() }}
-          style={{
-            bottom:
-              "calc(var(--bottom-nav-height, 88px) + env(safe-area-inset-bottom, 0px))",
-            transform: `translate3d(0, -${keyboardInset()}px, 0)`,
-          }}
-          aria-hidden={!isActivePage()}
         >
           {props.children}
         </div>

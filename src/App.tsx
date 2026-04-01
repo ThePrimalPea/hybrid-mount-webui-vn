@@ -1,4 +1,12 @@
-import { createSignal, createMemo, onMount, Show, lazy, For } from "solid-js";
+import {
+  createSignal,
+  createMemo,
+  onMount,
+  onCleanup,
+  Show,
+  lazy,
+  For,
+} from "solid-js";
 import { uiStore } from "./lib/stores/uiStore";
 import { configStore } from "./lib/stores/configStore";
 import { sysStore } from "./lib/stores/sysStore";
@@ -6,11 +14,16 @@ import TopBar from "./components/TopBar";
 import NavBar from "./components/NavBar";
 import Toast from "./components/Toast";
 
+const loadStatusTab = () => import("./routes/StatusTab");
+const loadConfigTab = () => import("./routes/ConfigTab");
+const loadModulesTab = () => import("./routes/ModulesTab");
+const loadInfoTab = () => import("./routes/InfoTab");
+
 const routes = [
-  { id: "status", component: lazy(() => import("./routes/StatusTab")) },
-  { id: "config", component: lazy(() => import("./routes/ConfigTab")) },
-  { id: "modules", component: lazy(() => import("./routes/ModulesTab")) },
-  { id: "info", component: lazy(() => import("./routes/InfoTab")) },
+  { id: "status", load: loadStatusTab, component: lazy(loadStatusTab) },
+  { id: "config", load: loadConfigTab, component: lazy(loadConfigTab) },
+  { id: "modules", load: loadModulesTab, component: lazy(loadModulesTab) },
+  { id: "info", load: loadInfoTab, component: lazy(loadInfoTab) },
 ];
 
 export default function App() {
@@ -100,6 +113,24 @@ export default function App() {
   onMount(async () => {
     await uiStore.init();
     await Promise.all([configStore.loadConfig(), sysStore.loadStatus()]);
+
+    const pendingRoutes = routes.filter((route) => route.id !== activeTab());
+    let preloadTimer = 0;
+    let nextIndex = 0;
+
+    const preloadNextRoute = () => {
+      const nextRoute = pendingRoutes[nextIndex++];
+      if (!nextRoute) return;
+
+      void nextRoute.load();
+
+      if (nextIndex < pendingRoutes.length) {
+        preloadTimer = window.setTimeout(preloadNextRoute, 120);
+      }
+    };
+
+    preloadTimer = window.setTimeout(preloadNextRoute, 250);
+    onCleanup(() => window.clearTimeout(preloadTimer));
   });
 
   return (
