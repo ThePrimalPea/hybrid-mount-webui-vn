@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, Show, For } from "solid-js";
+import { createMemo, createSignal, Show, For } from "solid-js";
 import { uiStore } from "../lib/stores/uiStore";
 import { sysStore } from "../lib/stores/sysStore";
 import { configStore } from "../lib/stores/configStore";
@@ -17,9 +17,6 @@ import "@material/web/button/text-button.js";
 import "@material/web/ripple/ripple.js";
 
 export default function StatusTab() {
-  let overlayBarRef: HTMLDivElement | undefined;
-  let magicBarRef: HTMLDivElement | undefined;
-
   const displayPartitions = createMemo(() => [
     ...new Set([
       ...BUILTIN_PARTITIONS,
@@ -50,12 +47,6 @@ export default function StatusTab() {
       overlay: (stats.overlay / total) * 100,
       magic: (stats.magic / total) * 100,
     };
-  });
-
-  createEffect(() => {
-    const { overlay, magic } = modeDistribution();
-    if (overlayBarRef) overlayBarRef.style.width = `${overlay}%`;
-    if (magicBarRef) magicBarRef.style.width = `${magic}%`;
   });
 
   return (
@@ -170,8 +161,14 @@ export default function StatusTab() {
             }
           >
             <div class="stats-bar-container">
-              <div ref={overlayBarRef} class="bar-segment bar-overlay"></div>
-              <div ref={magicBarRef} class="bar-segment bar-magic"></div>
+              <div
+                class="bar-segment bar-overlay"
+                style={{ width: `${modeDistribution().overlay}%` }}
+              ></div>
+              <div
+                class="bar-segment bar-magic"
+                style={{ width: `${modeDistribution().magic}%` }}
+              ></div>
             </div>
             <div class="stats-legend">
               <div class="legend-item">
