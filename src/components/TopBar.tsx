@@ -36,7 +36,10 @@ export default function TopBar() {
         <div class="top-bar-content">
           <h1 class="screen-title">{uiStore.L?.common?.appName}</h1>
           <div class="top-actions">
-            <md-icon-button onClick={openLangDialog} title={uiStore.L?.common?.language}>
+            <md-icon-button
+              onClick={openLangDialog}
+              title={uiStore.L?.common?.language}
+            >
               <md-icon>
                 <svg viewBox="0 0 24 24">
                   <path d={ICONS.translate} />
@@ -47,38 +50,40 @@ export default function TopBar() {
         </div>
       </header>
 
-      <md-dialog ref={langDialogRef} class="lang-dialog">
-        <div slot="headline">{uiStore.L?.common?.language || "Language"}</div>
+      <div class="dialog-container">
+        <md-dialog ref={langDialogRef} class="lang-dialog">
+          <div slot="headline">{uiStore.L?.common?.language || "Language"}</div>
 
-        <div slot="content" class="lang-list-container">
-          <md-list>
-            <For each={uiStore.availableLanguages}>
-              {(l) => (
-                <md-list-item
-                  class="lang-option"
-                  type="button"
-                  onClick={() => setLang(l.code)}
-                >
-                  <div slot="headline">{l.name}</div>
-                  <Show when={uiStore.lang === l.code}>
-                    <md-icon slot="end">
-                      <svg viewBox="0 0 24 24">
-                        <path d={ICONS.check} />
-                      </svg>
-                    </md-icon>
-                  </Show>
-                </md-list-item>
-              )}
-            </For>
-          </md-list>
-        </div>
+          <div slot="content" class="lang-list-container">
+            <md-list>
+              <For each={uiStore.availableLanguages}>
+                {(l) => (
+                  <md-list-item
+                    class="lang-option"
+                    type="button"
+                    onClick={() => setLang(l.code)}
+                  >
+                    <div slot="headline">{l.name}</div>
+                    <Show when={uiStore.lang === l.code}>
+                      <md-icon slot="end">
+                        <svg viewBox="0 0 24 24">
+                          <path d={ICONS.check} />
+                        </svg>
+                      </md-icon>
+                    </Show>
+                  </md-list-item>
+                )}
+              </For>
+            </md-list>
+          </div>
 
-        <div slot="actions">
-          <md-text-button onClick={closeLangDialog}>
-            {uiStore.L?.common?.cancel || "Cancel"}
-          </md-text-button>
-        </div>
-      </md-dialog>
+          <div slot="actions">
+            <md-text-button onClick={closeLangDialog}>
+              {uiStore.L?.common?.cancel || "Cancel"}
+            </md-text-button>
+          </div>
+        </md-dialog>
+      </div>
     </>
   );
 }

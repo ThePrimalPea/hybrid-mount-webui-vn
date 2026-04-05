@@ -22,7 +22,7 @@
 
   --top-inset: var(--window-inset-top, 0px);
   --bottom-inset: var(--window-inset-bottom, 0px);
-  --bottom-nav-height: 88px;
+  --bottom-nav-height: 64px;
 
   --md-sys-color-primary: var(--primary, #6750a4);
   --md-sys-color-on-primary: var(--onPrimary, #ffffff);
@@ -266,7 +266,7 @@ button:active {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 16px 24px calc(16px + var(--safe-area-inset-bottom, 0px)) 24px;
+  padding: 16px 24px calc(16px + var(--bottom-inset)) 24px;
   background: linear-gradient(
     to top,
     var(--md-sys-color-surface) 85%,
@@ -284,12 +284,13 @@ button:active {
   pointer-events: auto;
 }
 
-
 .bottom-actions-root {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--bottom-nav-height, 88px) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(
+    var(--bottom-nav-height, 64px) + var(--bottom-inset, 0px) + 16px
+  );
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -314,6 +315,7 @@ button:active {
 
 .bottom-actions-root > * {
   pointer-events: auto;
+  flex-shrink: 0;
 }
 
 .bottom-actions-root > .spacer {
@@ -331,6 +333,12 @@ button:active {
 code,
 pre {
   font-family: var(--md-ref-typeface-mono);
+}
+
+md-input-chip {
+  max-width: 100%;
+  display: flow-root;
+  word-break: break-all;
 }
 
 md-dialog {
