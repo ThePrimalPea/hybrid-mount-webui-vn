@@ -16,6 +16,9 @@ import "@material/web/dialog/dialog.js";
 import "@material/web/button/text-button.js";
 import "@material/web/ripple/ripple.js";
 
+const STAR_PATH =
+  "M12 2.25c.19 5.34 4.41 9.56 9.75 9.75-5.34.19-9.56 4.41-9.75 9.75-.19-5.34-4.41-9.56-9.75-9.75C7.59 11.81 11.81 7.59 12 2.25z";
+
 export default function StatusTab() {
   const displayPartitions = createMemo(() => [
     ...new Set([
@@ -51,35 +54,42 @@ export default function StatusTab() {
 
   return (
     <>
-      <md-dialog
-        open={showRebootConfirm()}
-        onclose={() => setShowRebootConfirm(false)}
-        class="transparent-scrim"
-      >
-        <div slot="headline">
-          {uiStore.L?.common?.rebootTitle ?? "Reboot System?"}
-        </div>
-        <div slot="content">
-          {uiStore.L?.common?.rebootConfirm ??
-            "Are you sure you want to reboot the device?"}
-        </div>
-        <div slot="actions">
-          <md-text-button onClick={() => setShowRebootConfirm(false)}>
-            {uiStore.L?.common?.cancel ?? "Cancel"}
-          </md-text-button>
-          <md-text-button
-            onClick={() => {
-              setShowRebootConfirm(false);
-              API.reboot();
-            }}
-          >
-            {uiStore.L?.common?.reboot ?? "Reboot"}
-          </md-text-button>
-        </div>
-      </md-dialog>
+      <div class="dialog-container">
+        <md-dialog
+          open={showRebootConfirm()}
+          onclose={() => setShowRebootConfirm(false)}
+          class="transparent-scrim"
+        >
+          <div slot="headline">
+            {uiStore.L?.common?.rebootTitle ?? "Reboot System?"}
+          </div>
+          <div slot="content">
+            {uiStore.L?.common?.rebootConfirm ??
+              "Are you sure you want to reboot the device?"}
+          </div>
+          <div slot="actions">
+            <md-text-button onClick={() => setShowRebootConfirm(false)}>
+              {uiStore.L?.common?.cancel ?? "Cancel"}
+            </md-text-button>
+            <md-text-button
+              onClick={() => {
+                setShowRebootConfirm(false);
+                API.reboot();
+              }}
+            >
+              {uiStore.L?.common?.reboot ?? "Reboot"}
+            </md-text-button>
+          </div>
+        </md-dialog>
+      </div>
 
       <div class="dashboard-grid">
         <div class="hero-card">
+          <div class="hero-bg-decoration">
+            <svg viewBox="0 0 24 24">
+              <path d={STAR_PATH} />
+            </svg>
+          </div>
           <Show
             when={!sysStore.loading}
             fallback={

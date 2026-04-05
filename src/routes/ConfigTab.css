@@ -286,6 +286,12 @@ md-icon svg {
 .mode-item.selected .mode-check {
   opacity: 1;
 }
+
+.dialog-container {
+  position: relative;
+  z-index: 500;
+}
+
 md-dialog.transparent-scrim {
   --md-dialog-scrim-color: transparent;
   --md-sys-color-scrim: transparent;

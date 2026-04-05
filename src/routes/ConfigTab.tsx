@@ -116,27 +116,29 @@ export default function ConfigTab() {
 
   return (
     <>
-      <md-dialog
-        open={showResetConfirm()}
-        onclose={() => setShowResetConfirm(false)}
-        class="transparent-scrim"
-      >
-        <div slot="headline">
-          {uiStore.L.config?.resetConfigTitle ?? "Reset Configuration?"}
-        </div>
-        <div slot="content">
-          {uiStore.L.config?.resetConfigConfirm ??
-            "This will reset all backend settings to defaults. Continue?"}
-        </div>
-        <div slot="actions">
-          <md-text-button onClick={() => setShowResetConfirm(false)}>
-            {uiStore.L.common?.cancel ?? "Cancel"}
-          </md-text-button>
-          <md-text-button onClick={reset}>
-            {uiStore.L.config?.resetConfig ?? "Reset Config"}
-          </md-text-button>
-        </div>
-      </md-dialog>
+      <div class="dialog-container">
+        <md-dialog
+          open={showResetConfirm()}
+          onclose={() => setShowResetConfirm(false)}
+          class="transparent-scrim"
+        >
+          <div slot="headline">
+            {uiStore.L.config?.resetConfigTitle ?? "Reset Configuration?"}
+          </div>
+          <div slot="content">
+            {uiStore.L.config?.resetConfigConfirm ??
+              "This will reset all backend settings to defaults. Continue?"}
+          </div>
+          <div slot="actions">
+            <md-text-button onClick={() => setShowResetConfirm(false)}>
+              {uiStore.L.common?.cancel ?? "Cancel"}
+            </md-text-button>
+            <md-text-button onClick={reset}>
+              {uiStore.L.config?.resetConfig ?? "Reset Config"}
+            </md-text-button>
+          </div>
+        </md-dialog>
+      </div>
 
       <div class="config-container">
         <section class="config-group">

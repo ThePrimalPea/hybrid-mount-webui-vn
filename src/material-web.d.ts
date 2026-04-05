@@ -10,10 +10,12 @@ type BaseProps = JSX.HTMLAttributes<HTMLElement>;
 interface MdDialogProps extends BaseProps {
   open?: boolean;
   onclose?: (e: Event) => void;
+  onClose?: (e: Event) => void;
 }
 
 interface MdTextFieldProps extends BaseProps {
   label?: string;
+  placeholder?: string;
   value?: string;
   error?: boolean;
   "supporting-text"?: string;

@@ -11,38 +11,56 @@
 }
 
 .hero-card {
-  background-color: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-primary),
+    var(--md-sys-color-tertiary)
+  );
+  color: var(--md-sys-color-on-primary);
   border-radius: 28px;
-  padding: 24px;
+  padding: 32px 28px;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 140px;
+  min-height: 180px;
   gap: 24px;
-  transition: all 0.3s ease;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  user-select: none;
 }
 
 .hero-card::after {
   content: "";
   position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 180px;
-  height: 180px;
-  background: currentColor;
-  opacity: 0.08;
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at top right,
+    rgba(255, 255, 255, 0.15),
+    transparent 60%
+  );
   pointer-events: none;
 }
 
-.hero-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  z-index: 1;
+.hero-bg-decoration {
+  position: absolute;
+  right: -30px;
+  bottom: -40px;
+  width: 200px;
+  height: 200px;
+  opacity: 0.15;
+  transform: rotate(-15deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-bg-decoration svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 
 .hero-content {
@@ -67,7 +85,7 @@
 
 .mount-base-chip {
   align-self: flex-start;
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.2);
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 12px;
@@ -79,6 +97,8 @@
   max-width: 100%;
   z-index: 1;
   backdrop-filter: blur(4px);
+  color: var(--md-sys-color-on-primary);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .mount-base-icon {
@@ -279,6 +299,11 @@
   gap: 8px;
 }
 
+.dialog-container {
+  position: relative;
+  z-index: 500;
+}
+
 .transparent-scrim {
   --md-dialog-scrim-color: transparent;
   --md-sys-color-scrim: transparent;
@@ -310,4 +335,10 @@ md-icon svg {
   width: 24px;
   height: 24px;
   fill: currentColor;
+}
+
+@media (max-width: 640px) {
+  .hero-content {
+    max-width: 100%;
+  }
 }

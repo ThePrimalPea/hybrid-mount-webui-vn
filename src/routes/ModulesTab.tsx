@@ -38,8 +38,7 @@ export default function ModulesTab() {
 
   onMount(() => {
     load();
-    const observerRoot =
-      observerTarget?.closest(".page-scroller") ?? undefined;
+    const observerRoot = observerTarget?.closest(".page-scroller") ?? undefined;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -235,7 +234,16 @@ export default function ModulesTab() {
               when={filteredModules().length > 0}
               fallback={
                 <div class="empty-state">
-                  <div>{uiStore.L.modules?.emptyState ?? "No modules found."}</div>
+                  <div class="empty-icon">
+                    <md-icon>
+                      <svg viewBox="0 0 24 24">
+                        <path d={ICONS.modules} />
+                      </svg>
+                    </md-icon>
+                  </div>
+                  <div>
+                    {uiStore.L.modules?.emptyState ?? "No modules found."}
+                  </div>
                   <Show when={!showUmount()}>
                     <div class="empty-state-hint">
                       {uiStore.L.modules?.umountHiddenHint ??
@@ -248,15 +256,13 @@ export default function ModulesTab() {
               <For each={filteredModules().slice(0, visibleCount())}>
                 {(mod) => (
                   <div
-                    class={`module-card ${expandedId() === mod.id ? "expanded" : ""} ${initialRulesSnapshot()[mod.id] !== JSON.stringify(mod.rules) ? "dirty" : ""}`}
+                    class={`module-card ${expandedId() === mod.id ? "expanded" : ""} ${initialRulesSnapshot()[mod.id] !== JSON.stringify(mod.rules) ? "dirty" : ""} ${mod.is_mounted ? "" : "unmounted"}`}
                   >
                     <button
                       class="module-header"
                       onClick={() => toggleExpand(mod.id)}
                       type="button"
-                      aria-expanded={
-                        expandedId() === mod.id ? "true" : "false"
-                      }
+                      aria-expanded={expandedId() === mod.id ? "true" : "false"}
                     >
                       <div class="module-info">
                         <div class="module-name">{mod.name}</div>
