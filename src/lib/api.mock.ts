@@ -1,5 +1,6 @@
 import { APP_VERSION } from "./constants_gen";
 import { DEFAULT_CONFIG } from "./constants";
+import type { AppAPI } from "./api";
 import type {
   AppConfig,
   DeviceInfo,
@@ -11,7 +12,7 @@ import type {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const MockAPI = {
+export const MockAPI: AppAPI = {
   async loadConfig(): Promise<AppConfig> {
     await delay(300);
     return { ...DEFAULT_CONFIG };
@@ -24,7 +25,7 @@ export const MockAPI = {
     await delay(500);
     console.log("[Mock] Config reset to defaults");
   },
-  async scanModules(_dir: string): Promise<Module[]> {
+  async scanModules(_dir?: string): Promise<Module[]> {
     await delay(600);
     return [
       {
@@ -68,6 +69,10 @@ export const MockAPI = {
       },
     ];
   },
+  async saveModules(modules: Module[]): Promise<void> {
+    await delay(400);
+    console.log("[Mock] Modules saved:", modules);
+  },
   async saveModuleRules(moduleId: string, rules: ModuleRules): Promise<void> {
     await delay(400);
     console.log(`[Mock] Rules saved for ${moduleId}:`, rules);
@@ -101,5 +106,16 @@ export const MockAPI = {
       zygisksuEnforce: "1",
       tmpfs_xattr_supported: false,
     };
+  },
+  async openLink(url: string): Promise<void> {
+    window.open(url, "_blank", "noopener,noreferrer");
+  },
+  async reboot(): Promise<void> {
+    await delay(150);
+    console.log("[Mock] Reboot requested");
+  },
+  async readLogs(): Promise<string> {
+    await delay(200);
+    return "[Mock] No logs available in development mode.";
   },
 };

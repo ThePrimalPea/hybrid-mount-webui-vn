@@ -42,6 +42,8 @@ export default function App() {
   let touchStartY = 0;
   let ticking = false;
   let rafId: number | null = null;
+  let preloadTimer: number | undefined;
+  let disposed = false;
 
   const visibleTabs = createMemo(() => routes.map((r) => r.id));
 
@@ -125,7 +127,18 @@ export default function App() {
     setDragOffset(0);
   }
 
-  onMount(async () => {
+  onCleanup(() => {
+    disposed = true;
+    if (preloadTimer !== undefined) {
+      window.clearTimeout(preloadTimer);
+    }
+  });
+
+  onMount(() => {
+    void initializeApp();
+  });
+
+  async function initializeApp() {
     await uiStore.init();
     await Promise.all([
       configStore.loadConfig(),
@@ -133,11 +146,14 @@ export default function App() {
       moduleStore.ensureModulesLoaded(),
     ]);
 
+    if (disposed) return;
+
     const pendingRoutes = routes.filter((route) => route.id !== activeTab());
-    let preloadTimer = 0;
     let nextIndex = 0;
 
     const preloadNextRoute = () => {
+      if (disposed) return;
+
       const nextRoute = pendingRoutes[nextIndex++];
       if (!nextRoute) return;
 
@@ -149,8 +165,7 @@ export default function App() {
     };
 
     preloadTimer = window.setTimeout(preloadNextRoute, 250);
-    onCleanup(() => window.clearTimeout(preloadTimer));
-  });
+  }
 
   return (
     <div class="app-root">
