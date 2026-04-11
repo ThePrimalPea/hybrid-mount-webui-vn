@@ -9,18 +9,11 @@
   bottom: 0;
   display: flex;
   background-color: var(--md-sys-color-surface-container-high);
-  height: calc(var(--bottom-nav-height) + var(--stable-bottom-inset, 0px));
+  height: calc(var(--bottom-nav-height) + var(--bottom-inset));
   align-items: center;
   box-sizing: border-box;
-  padding-bottom: var(--stable-bottom-inset, 0px);
+  padding-bottom: var(--bottom-inset);
   z-index: 100;
-  will-change: transform;
-  transform: translate3d(
-    0,
-    calc(-1 * var(--bottom-nav-keyboard-shift, 0px)),
-    0
-  );
-  transition: transform 0.24s cubic-bezier(0.2, 1, 0.2, 1);
 }
 
 .nav-tab {
