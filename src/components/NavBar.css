@@ -9,10 +9,10 @@
   bottom: 0;
   display: flex;
   background-color: var(--md-sys-color-surface-container-high);
-  height: calc(var(--bottom-nav-height) + var(--bottom-inset));
+  height: calc(var(--bottom-nav-height) + var(--stable-bottom-inset, 0px));
   align-items: center;
   box-sizing: border-box;
-  padding-bottom: var(--bottom-inset);
+  padding-bottom: var(--stable-bottom-inset, 0px);
   z-index: 100;
   will-change: transform;
   transform: translate3d(0, calc(-1 * var(--bottom-keyboard-shift, 0px)), 0);

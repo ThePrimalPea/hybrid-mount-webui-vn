@@ -22,11 +22,14 @@
 
   --top-inset: var(--window-inset-top, env(safe-area-inset-top, 0px));
   --bottom-inset: var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --stable-bottom-inset: var(--bottom-inset);
   --bottom-nav-height: 64px;
   --viewport-bottom-offset: 0px;
   --bottom-keyboard-shift: max(
     0px,
-    calc(var(--viewport-bottom-offset, 0px) - var(--bottom-inset, 0px))
+    calc(
+      var(--viewport-bottom-offset, 0px) - var(--stable-bottom-inset, 0px)
+    )
   );
 
   --md-sys-color-primary: var(--primary, #6750a4);
@@ -271,7 +274,7 @@ button:active {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 16px 24px calc(16px + var(--bottom-inset)) 24px;
+  padding: 16px 24px calc(16px + var(--stable-bottom-inset)) 24px;
   background: linear-gradient(
     to top,
     var(--md-sys-color-surface) 85%,
@@ -290,12 +293,13 @@ button:active {
 }
 
 .bottom-actions-root {
+  --bottom-actions-rest-offset: calc(
+    var(--bottom-nav-height, 64px) + var(--stable-bottom-inset, 0px) + 16px
+  );
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(
-    var(--bottom-nav-height, 64px) + var(--bottom-inset, 0px) + 16px
-  );
+  bottom: var(--bottom-actions-rest-offset);
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -304,12 +308,22 @@ button:active {
   opacity: 0;
   pointer-events: none;
   will-change: opacity, transform;
-  transform: translate3d(0, calc(-1 * var(--bottom-keyboard-shift, 0px)), 0);
-  transition: opacity 0.2s ease;
+  transform: translate3d(
+    0,
+    calc(
+      var(--bottom-actions-rest-offset) -
+        var(--bottom-keyboard-shift, 0px)
+    ),
+    0
+  );
+  transition:
+    opacity 0.2s ease,
+    transform 0.24s cubic-bezier(0.2, 1, 0.2, 1);
 }
 
 .bottom-actions-root.is-active {
   opacity: 1;
+  transform: translate3d(0, calc(-1 * var(--bottom-keyboard-shift, 0px)), 0);
 }
 
 .bottom-actions-root > * {
@@ -325,7 +339,9 @@ button:active {
 
 @media (prefers-reduced-motion: reduce) {
   .bottom-actions-root {
-    transition: opacity 0.01s linear;
+    transition:
+      opacity 0.01s linear,
+      transform 0.01s linear;
   }
 }
 

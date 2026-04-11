@@ -8,7 +8,7 @@ import { createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 
 export default function BottomActions(props: ParentProps) {
-  const [isActivePage, setIsActivePage] = createSignal(true);
+  const [isActivePage, setIsActivePage] = createSignal(false);
   let anchorRef: HTMLDivElement | undefined;
   let rootRef: HTMLDivElement | undefined;
 

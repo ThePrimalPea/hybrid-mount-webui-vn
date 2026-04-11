@@ -137,10 +137,23 @@ export default function App() {
   onMount(() => {
     const viewport = window.visualViewport;
     const rootStyle = document.documentElement.style;
+    const readBottomInset = () => {
+      const value = getComputedStyle(document.documentElement)
+        .getPropertyValue("--bottom-inset")
+        .trim();
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
+    };
 
     if (viewport) {
       let viewportRafId = 0;
       let lastInset = -1;
+      let stableBottomInset = readBottomInset();
+
+      rootStyle.setProperty(
+        "--stable-bottom-inset",
+        `${stableBottomInset}px`,
+      );
 
       const updateViewportBottomOffset = () => {
         if (viewportRafId) return;
@@ -153,6 +166,17 @@ export default function App() {
               window.innerHeight - viewport.height - viewport.offsetTop,
             ),
           );
+
+          if (inset <= stableBottomInset + 2) {
+            const nextStableInset = readBottomInset();
+            if (Math.abs(nextStableInset - stableBottomInset) >= 2) {
+              stableBottomInset = nextStableInset;
+              rootStyle.setProperty(
+                "--stable-bottom-inset",
+                `${stableBottomInset}px`,
+              );
+            }
+          }
 
           if (Math.abs(lastInset - inset) < 2) return;
           lastInset = inset;
@@ -173,6 +197,7 @@ export default function App() {
           "orientationchange",
           updateViewportBottomOffset,
         );
+        rootStyle.removeProperty("--stable-bottom-inset");
         rootStyle.removeProperty("--viewport-bottom-offset");
       });
     }
