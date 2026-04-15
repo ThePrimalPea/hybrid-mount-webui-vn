@@ -113,7 +113,7 @@ describe("ModulesTab", () => {
     }));
 
     vi.doMock("../components/BottomActions", () => ({
-      default: (props: { children: unknown }) => <div>{props.children}</div>,
+      default: (props: { children: any }) => <div>{props.children}</div>,
     }));
 
     for (const modulePath of [

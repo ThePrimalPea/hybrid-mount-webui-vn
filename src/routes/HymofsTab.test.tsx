@@ -103,7 +103,7 @@ describe("HymofsTab", () => {
     }));
 
     vi.doMock("../components/BottomActions", () => ({
-      default: (props: { children: unknown }) => <div>{props.children}</div>,
+      default: (props: { children: any }) => <div>{props.children}</div>,
     }));
 
     vi.doMock("../components/Skeleton", () => ({
