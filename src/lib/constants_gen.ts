@@ -1,4 +1,3 @@
-
 export const APP_VERSION = "3.4.6";
 export const IS_RELEASE = false;
 export const RUST_PATHS = {
@@ -8,4 +7,12 @@ export const RUST_PATHS = {
   DAEMON_STATE: "/data/adb/hybrid-mount/run/daemon_state.json",
   DAEMON_LOG: "/data/adb/hybrid-mount/daemon.log",
 } as const;
-export const BUILTIN_PARTITIONS = ["system", "vendor", "product", "system_ext", "odm", "oem", "apex"] as const;
+export const BUILTIN_PARTITIONS = [
+  "system",
+  "vendor",
+  "product",
+  "system_ext",
+  "odm",
+  "oem",
+  "apex",
+] as const;

@@ -76,7 +76,10 @@ async function fetchStatus(
   if (lkmLoaded) {
     return API.getHymofsStatus();
   }
-  return buildUnloadedHymofsStatus(synthesizeUnloadedLkm(previous), previous?.config);
+  return buildUnloadedHymofsStatus(
+    synthesizeUnloadedLkm(previous),
+    previous?.config,
+  );
 }
 
 const createHymofsStore = () => {

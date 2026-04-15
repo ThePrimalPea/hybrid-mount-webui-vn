@@ -5,9 +5,69 @@
   padding: 12px 0 100px;
 }
 
+.dialog-container {
+  position: relative;
+  z-index: 500;
+}
+
+md-dialog.transparent-scrim {
+  --md-dialog-scrim-color: transparent;
+}
+
+.hymofs-kmi-dialog {
+  padding: 0 !important;
+  min-width: 280px;
+}
+
+.hymofs-kmi-dialog md-list {
+  padding: 0;
+  --md-list-container-color: transparent;
+  border-radius: var(--md-sys-shape-corner-large);
+  overflow: clip;
+  gap: 2px;
+}
+
+.hymofs-kmi-dialog md-list-item {
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: 4px;
+}
+
+.hymofs-kmi-dialog md-list-item md-icon[slot="end"] {
+  color: var(--md-sys-color-primary);
+}
+
+.hymofs-dashboard-grid {
+  padding-bottom: 0;
+}
+
+.hymofs-status-card {
+  min-height: 168px;
+}
+
+.hymofs-hero-caption {
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 42ch;
+  opacity: 0.82;
+}
+
+.hymofs-status-metrics .metric-card {
+  min-height: 132px;
+}
+
+.hymofs-status-metrics .metric-value {
+  font-size: 24px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
 .hymofs-hero {
   background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 40%),
+    radial-gradient(
+      circle at top right,
+      rgba(255, 255, 255, 0.14),
+      transparent 40%
+    ),
     linear-gradient(
       135deg,
       var(--md-sys-color-primary-container),
@@ -152,10 +212,40 @@
   width: 100%;
 }
 
+.hymofs-input-field {
+  width: 100%;
+  --md-outlined-text-field-container-shape: 16px;
+}
+
 .hymofs-select-field {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.hymofs-select-button {
+  width: 100%;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 16px;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.hymofs-select-button:disabled {
+  opacity: 0.6;
+}
+
+.hymofs-select-button-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.hymofs-select-button-value {
+  margin-top: 4px;
+  font-size: 15px;
 }
 
 .hymofs-select-label {
@@ -168,17 +258,22 @@
   appearance: none;
   width: 100%;
   min-height: 56px;
-  border-radius: 18px;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: 16px;
+  border: 1px solid var(--md-sys-color-outline);
+  background-color: var(--md-sys-color-surface);
   color: var(--md-sys-color-on-surface);
   padding: 0 16px;
   font-size: 15px;
+  transition: border-color 0.2s ease;
 }
 
 .hymofs-select:focus {
   outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 1px;
+}
+
+.hymofs-select:disabled {
+  opacity: 0.6;
 }
 
 .button-row {
@@ -199,43 +294,56 @@
   color: var(--md-sys-color-on-surface);
 }
 
-.toggle-grid {
+.hymofs-config-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
-.toggle-tile {
+.hymofs-config-tile {
   border: none;
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-container);
   color: var(--md-sys-color-on-surface);
-  border-radius: 18px;
+  border-radius: 20px;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
   align-items: flex-start;
   text-align: left;
+  position: relative;
+  overflow: hidden;
 }
 
-.toggle-tile span {
-  font-size: 12px;
+.hymofs-config-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--md-sys-color-surface-container-high);
   color: var(--md-sys-color-on-surface-variant);
 }
 
-.toggle-tile strong {
-  font-size: 18px;
-  line-height: 1.1;
+.hymofs-config-label {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
-.toggle-tile.active {
-  background-color: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
+.hymofs-config-tile.active {
+  background-color: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
 }
 
-.toggle-tile.active span {
-  color: inherit;
-  opacity: 0.8;
+.hymofs-config-tile.active .hymofs-config-icon {
+  background-color: var(--md-sys-color-on-tertiary-container);
+  color: var(--md-sys-color-tertiary-container);
+}
+
+.hymofs-config-tile:disabled {
+  opacity: 0.6;
 }
 
 .runtime-note {

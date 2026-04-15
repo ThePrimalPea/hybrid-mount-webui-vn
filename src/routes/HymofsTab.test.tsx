@@ -113,8 +113,13 @@ describe("HymofsTab", () => {
     for (const modulePath of [
       "@material/web/button/filled-button.js",
       "@material/web/button/outlined-button.js",
+      "@material/web/button/text-button.js",
+      "@material/web/dialog/dialog.js",
       "@material/web/icon/icon.js",
       "@material/web/iconbutton/filled-tonal-icon-button.js",
+      "@material/web/list/list.js",
+      "@material/web/list/list-item.js",
+      "@material/web/ripple/ripple.js",
       "@material/web/textfield/outlined-text-field.js",
     ]) {
       vi.doMock(modulePath, () => ({}));
@@ -124,7 +129,9 @@ describe("HymofsTab", () => {
     const result = render(() => <HymofsTab />);
 
     await waitFor(() => {
-      expect(result.container.querySelectorAll("md-outlined-text-field").length).toBeGreaterThan(1);
+      expect(
+        result.container.querySelectorAll("md-outlined-text-field").length,
+      ).toBeGreaterThan(1);
     });
 
     return { ...result, getOriginalKernelUname, showToast };
@@ -136,9 +143,7 @@ describe("HymofsTab", () => {
 
     const button = Array.from(
       container.querySelectorAll("md-outlined-button"),
-    ).find((node) =>
-      node.textContent?.includes("Load Original Kernel Values"),
-    );
+    ).find((node) => node.textContent?.includes("Load Original Kernel Values"));
     expect(button).toBeDefined();
 
     await fireEvent.click(button!);

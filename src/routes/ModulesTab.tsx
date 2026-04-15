@@ -284,7 +284,8 @@ export default function ModulesTab() {
             >
               <For each={filteredModules().slice(0, visibleCount())}>
                 {(mod) => {
-                  const effectiveDefaultMode = () => getEffectiveDefaultMode(mod);
+                  const effectiveDefaultMode = () =>
+                    getEffectiveDefaultMode(mod);
                   return (
                     <div
                       class={`module-card ${expandedId() === mod.id ? "expanded" : ""} ${initialRulesSnapshot()[mod.id] !== JSON.stringify(mod.rules) ? "dirty" : ""} ${mod.is_mounted ? "" : "unmounted"}`}
@@ -293,7 +294,9 @@ export default function ModulesTab() {
                         class="module-header"
                         onClick={() => toggleExpand(mod.id)}
                         type="button"
-                        aria-expanded={expandedId() === mod.id ? "true" : "false"}
+                        aria-expanded={
+                          expandedId() === mod.id ? "true" : "false"
+                        }
                       >
                         <div class="module-info">
                           <div class="module-name">{mod.name}</div>
@@ -333,7 +336,9 @@ export default function ModulesTab() {
                                 </button>
                                 <button
                                   class={`strategy-option ${effectiveDefaultMode() === "magic" ? "selected" : ""}`}
-                                  onClick={() => updateDefaultMode(mod, "magic")}
+                                  onClick={() =>
+                                    updateDefaultMode(mod, "magic")
+                                  }
                                 >
                                   <span class="opt-title">
                                     {uiStore.L.modules?.modes?.short?.magic ??
@@ -352,28 +357,30 @@ export default function ModulesTab() {
                                     disabled={!hymofsAvailable()}
                                     title={
                                       !hymofsAvailable()
-                                        ? uiStore.L.modules
+                                        ? (uiStore.L.modules
                                             ?.hymofsUnavailableHint ??
-                                          "HymoFS is not currently available"
+                                          "HymoFS is not currently available")
                                         : undefined
                                     }
                                   >
                                     <span class="opt-title">
-                                      {uiStore.L.modules?.modes?.short?.hymofs ??
-                                        "HymoFS"}
+                                      {uiStore.L.modules?.modes?.short
+                                        ?.hymofs ?? "HymoFS"}
                                     </span>
                                     <span class="opt-sub">
                                       {!hymofsAvailable()
-                                        ? uiStore.L.modules?.unavailableTag ??
-                                          "Unavailable"
-                                        : uiStore.L.modules?.nativeTag ??
-                                          "Stealth"}
+                                        ? (uiStore.L.modules?.unavailableTag ??
+                                          "Unavailable")
+                                        : (uiStore.L.modules?.nativeTag ??
+                                          "Stealth")}
                                     </span>
                                   </button>
                                 </Show>
                                 <button
                                   class={`strategy-option ${effectiveDefaultMode() === "ignore" ? "selected" : ""}`}
-                                  onClick={() => updateDefaultMode(mod, "ignore")}
+                                  onClick={() =>
+                                    updateDefaultMode(mod, "ignore")
+                                  }
                                 >
                                   <span class="opt-title">
                                     {uiStore.L.modules?.modes?.short?.ignore ??

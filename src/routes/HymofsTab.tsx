@@ -8,11 +8,17 @@ import type { HymofsRuleEntry, HymofsStatus } from "../lib/types";
 import BottomActions from "../components/BottomActions";
 import Skeleton from "../components/Skeleton";
 import "./HymofsTab.css";
+import "./StatusTab.css";
 
 import "@material/web/button/filled-button.js";
 import "@material/web/button/outlined-button.js";
+import "@material/web/button/text-button.js";
+import "@material/web/dialog/dialog.js";
 import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/filled-tonal-icon-button.js";
+import "@material/web/list/list.js";
+import "@material/web/list/list-item.js";
+import "@material/web/ripple/ripple.js";
 import "@material/web/textfield/outlined-text-field.js";
 
 const KNOWN_KMI_OPTIONS = [
@@ -51,6 +57,7 @@ export default function HymofsTab() {
   const [userHideRules, setUserHideRules] = createSignal<string[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [pending, setPending] = createSignal(false);
+  const [showKmiDialog, setShowKmiDialog] = createSignal(false);
   const [forms, setForms] = createStore({
     kmi: "",
     release: "",
@@ -177,65 +184,110 @@ export default function HymofsTab() {
       return uiStore.L.hymofs?.statusDisabled ?? "Disabled";
     }
     return status()?.available
-      ? uiStore.L.hymofs?.statusWorking ?? "Working"
-      : uiStore.L.hymofs?.statusUnavailable ?? "Unavailable";
+      ? (uiStore.L.hymofs?.statusWorking ?? "Working")
+      : (uiStore.L.hymofs?.statusUnavailable ?? "Unavailable");
   });
-  const availabilityBadgeText = createMemo(() =>
-    status()?.available
-      ? uiStore.L.hymofs?.badgeWorking ?? "Working"
-      : uiStore.L.hymofs?.badgeUnavailable ?? "Unavailable",
-  );
-  const lkmBadgeText = createMemo(() =>
-    lkm()?.loaded
-      ? uiStore.L.hymofs?.badgeLkmLoaded ?? "LKM Loaded"
-      : uiStore.L.hymofs?.badgeLkmIdle ?? "LKM Idle",
-  );
   const autoloadText = createMemo(() =>
     lkm()?.autoload
-      ? uiStore.L.hymofs?.autoloadOn ?? "Autoload On"
-      : uiStore.L.hymofs?.autoloadOff ?? "Autoload Off",
+      ? (uiStore.L.hymofs?.autoloadOn ?? "Autoload On")
+      : (uiStore.L.hymofs?.autoloadOff ?? "Autoload Off"),
   );
-  const toggleStateText = (enabled: boolean | null | undefined) =>
-    enabled
-      ? uiStore.L.hymofs?.toggleOn ?? "On"
-      : uiStore.L.hymofs?.toggleOff ?? "Off";
   const rulesSummaryText = createMemo(() =>
-    (uiStore.L.hymofs?.rulesVisibleSummary ??
-      "{count} active rules visible from userspace").replace(
-      "{count}",
-      String(rules().length),
-    ),
+    (
+      uiStore.L.hymofs?.rulesVisibleSummary ??
+      "{count} active rules visible from userspace"
+    ).replace("{count}", String(rules().length)),
+  );
+  const heroSubtitleText = createMemo(
+    () =>
+      `API ${status()?.protocol_version ?? "-"} · ${uiStore.L.hymofs?.rulesBadge ?? "Rules"} ${status()?.rule_count ?? 0}`,
+  );
+  const statusChipText = createMemo(
+    () => status()?.mirror_path || config()?.mirror_path || "-",
   );
 
   return (
     <>
+      <div class="dialog-container">
+        <md-dialog
+          open={showKmiDialog()}
+          onclose={() => setShowKmiDialog(false)}
+          class="transparent-scrim"
+        >
+          <div slot="headline">
+            {uiStore.L.hymofs?.kmiOverride ?? "KMI Override"}
+          </div>
+          <div slot="content" class="hymofs-kmi-dialog">
+            <md-list>
+              <For each={kmiOptions()}>
+                {(option) => {
+                  const label = option
+                    ? option
+                    : (uiStore.L.hymofs?.autoKmi ?? "Auto Detect");
+
+                  return (
+                    <md-list-item
+                      class="lang-option"
+                      type="button"
+                      onClick={() => {
+                        setForms("kmi", option);
+                        setShowKmiDialog(false);
+                      }}
+                    >
+                      <div slot="headline">{label}</div>
+                      <Show when={forms.kmi === option}>
+                        <md-icon slot="end">
+                          <svg viewBox="0 0 24 24">
+                            <path d={ICONS.check} />
+                          </svg>
+                        </md-icon>
+                      </Show>
+                    </md-list-item>
+                  );
+                }}
+              </For>
+            </md-list>
+          </div>
+          <div slot="actions">
+            <md-text-button onClick={() => setShowKmiDialog(false)}>
+              {uiStore.L.common?.cancel ?? "Cancel"}
+            </md-text-button>
+          </div>
+        </md-dialog>
+      </div>
+
       <div class="hymofs-page">
-        <section class="hymofs-hero">
-          <div class="hymofs-hero-copy">
-            <span class="hymofs-kicker">
-              {uiStore.L.hymofs?.title ?? "HymoFS Runtime"}
-            </span>
-            <h2>{heroStatusText()}</h2>
-            <p>
-              {uiStore.L.hymofs?.subtitle ??
-                "Manage HymoFS runtime, LKM, and fast-path spoof settings."}
-            </p>
-          </div>
-          <div class="hymofs-hero-badges">
-            <span class={`hymofs-badge ${status()?.available ? "active" : ""}`}>
-              {availabilityBadgeText()}
-            </span>
-            <span class={`hymofs-badge ${lkm()?.loaded ? "active" : ""}`}>
-              {lkmBadgeText()}
-            </span>
-            <span class="hymofs-badge">
-              {`${uiStore.L.hymofs?.apiBadge ?? "API"} ${status()?.protocol_version ?? "-"}`}
-            </span>
-            <span class="hymofs-badge">
-              {`${uiStore.L.hymofs?.rulesBadge ?? "Rules"} ${status()?.rule_count ?? 0}`}
-            </span>
-          </div>
-        </section>
+        <div class="dashboard-grid hymofs-dashboard-grid">
+          <section class="hero-card hymofs-status-card">
+            <Show
+              when={!loading()}
+              fallback={
+                <div class="skeleton-col">
+                  <Skeleton width="40%" height="24px" />
+                  <Skeleton width="80%" height="48px" />
+                  <Skeleton width="60%" height="20px" />
+                </div>
+              }
+            >
+              <div class="hero-content">
+                <span class="hero-label">
+                  {uiStore.L.hymofs?.title ?? "HymoFS Runtime"}
+                </span>
+                <span class="hero-value">{heroStatusText()}</span>
+                <span class="hymofs-hero-caption">{heroSubtitleText()}</span>
+              </div>
+
+              <div class="mount-base-chip">
+                <md-icon class="mount-base-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path d={ICONS.mount_path} />
+                  </svg>
+                </md-icon>
+                <span class="mount-base-text">{statusChipText()}</span>
+              </div>
+            </Show>
+          </section>
+        </div>
 
         <div class="hymofs-grid">
           <section class="hymofs-card">
@@ -260,32 +312,19 @@ export default function HymofsTab() {
               </div>
             </div>
             <div class="field-row">
-              <label class="hymofs-select-field">
-                <span class="hymofs-select-label">
+              <button
+                class="hymofs-select-button"
+                type="button"
+                disabled={pending()}
+                onClick={() => setShowKmiDialog(true)}
+              >
+                <div class="hymofs-select-button-label">
                   {uiStore.L.hymofs?.kmiOverride ?? "KMI Override"}
-                </span>
-                <select
-                  class="hymofs-select full-field"
-                  value={forms.kmi}
-                  disabled={pending()}
-                  onChange={(e: Event) =>
-                    setForms(
-                      "kmi",
-                      (e.currentTarget as HTMLSelectElement).value,
-                    )
-                  }
-                >
-                  <For each={kmiOptions()}>
-                    {(option) => (
-                      <option value={option}>
-                        {option
-                          ? option
-                          : uiStore.L.hymofs?.autoKmi ?? "Auto Detect"}
-                      </option>
-                    )}
-                  </For>
-                </select>
-              </label>
+                </div>
+                <div class="hymofs-select-button-value">
+                  {forms.kmi || (uiStore.L.hymofs?.autoKmi ?? "Auto Detect")}
+                </div>
+              </button>
             </div>
             <div class="button-row">
               <md-filled-button
@@ -311,8 +350,8 @@ export default function HymofsTab() {
                 }
               >
                 {lkm()?.autoload
-                  ? uiStore.L.hymofs?.disableAutoload ?? "Disable autoload"
-                  : uiStore.L.hymofs?.enableAutoload ?? "Enable autoload"}
+                  ? (uiStore.L.hymofs?.disableAutoload ?? "Disable autoload")
+                  : (uiStore.L.hymofs?.enableAutoload ?? "Enable autoload")}
               </md-outlined-button>
               <md-filled-button
                 disabled={pending()}
@@ -323,14 +362,14 @@ export default function HymofsTab() {
                         ? API.unloadHymofsLkm()
                         : API.loadHymofsLkm(),
                     lkm()?.loaded
-                      ? uiStore.L.hymofs?.unloadLkm ?? "LKM unloaded"
-                      : uiStore.L.hymofs?.loadLkm ?? "LKM loaded",
+                      ? (uiStore.L.hymofs?.unloadLkm ?? "LKM unloaded")
+                      : (uiStore.L.hymofs?.loadLkm ?? "LKM loaded"),
                   )
                 }
               >
                 {lkm()?.loaded
-                  ? uiStore.L.hymofs?.unloadLkm ?? "Unload LKM"
-                  : uiStore.L.hymofs?.loadLkm ?? "Load LKM"}
+                  ? (uiStore.L.hymofs?.unloadLkm ?? "Unload LKM")
+                  : (uiStore.L.hymofs?.loadLkm ?? "Load LKM")}
               </md-filled-button>
             </div>
           </section>
@@ -343,59 +382,83 @@ export default function HymofsTab() {
                 </div>
               </div>
             </div>
-            <div class="meta-list">
-              <div class="meta-row">
-                <span>{uiStore.L.hymofs?.mirrorPath ?? "Mirror Path"}</span>
-                <strong>{status()?.mirror_path || config()?.mirror_path || "-"}</strong>
-              </div>
-            </div>
-            <div class="toggle-grid">
+            <div class="hymofs-config-grid">
               <button
-                class={`toggle-tile ${config()?.enable_stealth ? "active" : ""}`}
+                class={`hymofs-config-tile ${config()?.enable_stealth ? "active" : ""}`}
                 disabled={pending()}
                 onClick={() =>
                   runAction(
-                    () => API.setHymofsStealth(!Boolean(config()?.enable_stealth)),
+                    () =>
+                      API.setHymofsStealth(!Boolean(config()?.enable_stealth)),
                     uiStore.L.hymofs?.stealthUpdated ?? "Stealth updated",
                   )
                 }
               >
-                <span>{uiStore.L.hymofs?.stealthTitle ?? "Stealth"}</span>
-                <strong>{toggleStateText(config()?.enable_stealth)}</strong>
+                <md-ripple></md-ripple>
+                <div class="hymofs-config-icon">
+                  <md-icon>
+                    <svg viewBox="0 0 24 24">
+                      <path d={ICONS.ghost} />
+                    </svg>
+                  </md-icon>
+                </div>
+                <span class="hymofs-config-label">
+                  {uiStore.L.hymofs?.stealthTitle ?? "Stealth"}
+                </span>
               </button>
               <button
-                class={`toggle-tile ${config()?.enable_hidexattr ? "active" : ""}`}
+                class={`hymofs-config-tile ${config()?.enable_hidexattr ? "active" : ""}`}
                 disabled={pending()}
                 onClick={() =>
                   runAction(
                     () =>
-                      API.setHymofsHidexattr(!Boolean(config()?.enable_hidexattr)),
+                      API.setHymofsHidexattr(
+                        !Boolean(config()?.enable_hidexattr),
+                      ),
                     uiStore.L.hymofs?.hidexattrUpdated ?? "HideXattr updated",
                   )
                 }
               >
-                <span>{uiStore.L.hymofs?.hidexattrTitle ?? "HideXattr"}</span>
-                <strong>{toggleStateText(config()?.enable_hidexattr)}</strong>
+                <md-ripple></md-ripple>
+                <div class="hymofs-config-icon">
+                  <md-icon>
+                    <svg viewBox="0 0 24 24">
+                      <path d={ICONS.visibility_off} />
+                    </svg>
+                  </md-icon>
+                </div>
+                <span class="hymofs-config-label">
+                  {uiStore.L.hymofs?.hidexattrTitle ?? "HideXattr"}
+                </span>
               </button>
               <button
-                class={`toggle-tile ${config()?.enable_kernel_debug ? "active" : ""}`}
+                class={`hymofs-config-tile ${config()?.enable_kernel_debug ? "active" : ""}`}
                 disabled={pending()}
                 onClick={() =>
                   runAction(
                     () =>
-                      API.setHymofsDebug(!Boolean(config()?.enable_kernel_debug)),
+                      API.setHymofsDebug(
+                        !Boolean(config()?.enable_kernel_debug),
+                      ),
                     uiStore.L.hymofs?.kernelDebugUpdated ??
                       "Kernel debug updated",
                   )
                 }
               >
-                <span>
+                <md-ripple></md-ripple>
+                <div class="hymofs-config-icon">
+                  <md-icon>
+                    <svg viewBox="0 0 24 24">
+                      <path d={ICONS.bug} />
+                    </svg>
+                  </md-icon>
+                </div>
+                <span class="hymofs-config-label">
                   {uiStore.L.hymofs?.kernelDebugTitle ?? "Kernel Debug"}
                 </span>
-                <strong>{toggleStateText(config()?.enable_kernel_debug)}</strong>
               </button>
               <button
-                class={`toggle-tile ${config()?.ignore_protocol_mismatch ? "active" : ""}`}
+                class={`hymofs-config-tile ${config()?.ignore_protocol_mismatch ? "active" : ""}`}
                 disabled={pending()}
                 onClick={() =>
                   runAction(
@@ -408,11 +471,18 @@ export default function HymofsTab() {
                   )
                 }
               >
-                <span>
+                <md-ripple></md-ripple>
+                <div class="hymofs-config-icon">
+                  <md-icon>
+                    <svg viewBox="0 0 24 24">
+                      <path d={ICONS.warning} />
+                    </svg>
+                  </md-icon>
+                </div>
+                <span class="hymofs-config-label">
                   {uiStore.L.hymofs?.ignoreProtocolTitle ??
                     "Ignore Protocol Mismatch"}
                 </span>
-                <strong>{toggleStateText(config()?.ignore_protocol_mismatch)}</strong>
               </button>
             </div>
             <Show
@@ -439,7 +509,7 @@ export default function HymofsTab() {
             </div>
             <div class="field-stack">
               <md-outlined-text-field
-                class="full-field"
+                class="full-field hymofs-input-field"
                 label={uiStore.L.hymofs?.unameRelease ?? "Uname Release"}
                 value={forms.release}
                 onInput={(e: Event) =>
@@ -451,7 +521,7 @@ export default function HymofsTab() {
                 disabled={pending()}
               />
               <md-outlined-text-field
-                class="full-field"
+                class="full-field hymofs-input-field"
                 label={uiStore.L.hymofs?.unameVersion ?? "Uname Version"}
                 value={forms.version}
                 onInput={(e: Event) =>
@@ -498,7 +568,7 @@ export default function HymofsTab() {
                 </md-outlined-button>
               </div>
               <md-outlined-text-field
-                class="full-field"
+                class="full-field hymofs-input-field"
                 label={uiStore.L.hymofs?.cmdlineValue ?? "Cmdline Value"}
                 value={forms.cmdline}
                 onInput={(e: Event) =>
@@ -546,7 +616,7 @@ export default function HymofsTab() {
             </div>
             <div class="field-stack">
               <md-outlined-text-field
-                class="full-field"
+                class="full-field hymofs-input-field"
                 label={
                   uiStore.L.hymofs?.userHidePathLabel ?? "Persistent Hide Path"
                 }
@@ -563,19 +633,16 @@ export default function HymofsTab() {
                 <md-filled-button
                   disabled={pending()}
                   onClick={() =>
-                    runAction(
-                      () => {
-                        const path = forms.userHidePath.trim();
-                        if (!path) {
-                          throw new Error(
-                            uiStore.L.hymofs?.userHidePathRequired ??
-                              "Hide path cannot be empty",
-                          );
-                        }
-                        return API.addUserHideRule(path);
-                      },
-                      uiStore.L.hymofs?.hideRuleAdded ?? "Hide rule added",
-                    )
+                    runAction(() => {
+                      const path = forms.userHidePath.trim();
+                      if (!path) {
+                        throw new Error(
+                          uiStore.L.hymofs?.userHidePathRequired ??
+                            "Hide path cannot be empty",
+                        );
+                      }
+                      return API.addUserHideRule(path);
+                    }, uiStore.L.hymofs?.hideRuleAdded ?? "Hide rule added")
                   }
                 >
                   {uiStore.L.hymofs?.addHideRule ?? "Add Hide Rule"}
@@ -643,7 +710,7 @@ export default function HymofsTab() {
               <div class="field-stack">
                 <div class="sub-grid">
                   <md-outlined-text-field
-                    class="full-field"
+                    class="full-field hymofs-input-field"
                     label={uiStore.L.hymofs?.mapsTargetIno ?? "Target Inode"}
                     value={forms.mapsTargetIno}
                     onInput={(e: Event) =>
@@ -655,7 +722,7 @@ export default function HymofsTab() {
                     disabled={pending()}
                   />
                   <md-outlined-text-field
-                    class="full-field"
+                    class="full-field hymofs-input-field"
                     label={uiStore.L.hymofs?.mapsTargetDev ?? "Target Device"}
                     value={forms.mapsTargetDev}
                     onInput={(e: Event) =>
@@ -667,7 +734,7 @@ export default function HymofsTab() {
                     disabled={pending()}
                   />
                   <md-outlined-text-field
-                    class="full-field"
+                    class="full-field hymofs-input-field"
                     label={uiStore.L.hymofs?.mapsSpoofedIno ?? "Spoofed Inode"}
                     value={forms.mapsSpoofedIno}
                     onInput={(e: Event) =>
@@ -679,7 +746,7 @@ export default function HymofsTab() {
                     disabled={pending()}
                   />
                   <md-outlined-text-field
-                    class="full-field"
+                    class="full-field hymofs-input-field"
                     label={uiStore.L.hymofs?.mapsSpoofedDev ?? "Spoofed Device"}
                     value={forms.mapsSpoofedDev}
                     onInput={(e: Event) =>
@@ -692,11 +759,14 @@ export default function HymofsTab() {
                   />
                 </div>
                 <md-outlined-text-field
-                  class="full-field"
+                  class="full-field hymofs-input-field"
                   label={uiStore.L.hymofs?.mapsSpoofedPath ?? "Spoofed Path"}
                   value={forms.mapsPath}
                   onInput={(e: Event) =>
-                    setForms("mapsPath", (e.currentTarget as HTMLInputElement).value)
+                    setForms(
+                      "mapsPath",
+                      (e.currentTarget as HTMLInputElement).value,
+                    )
                   }
                   disabled={pending()}
                 />
@@ -704,38 +774,34 @@ export default function HymofsTab() {
                   <md-filled-button
                     disabled={pending()}
                     onClick={() =>
-                      runAction(
-                        () => {
-                          const spoofedPath = forms.mapsPath.trim();
-                          if (!spoofedPath) {
-                            throw new Error(
-                              uiStore.L.hymofs?.mapsPathRequired ??
-                                "Spoofed path cannot be empty",
-                            );
-                          }
-                          return API.addHymofsMapsRule({
-                            target_ino: parseUnsignedInput(
-                              forms.mapsTargetIno,
-                              "target inode",
-                            ),
-                            target_dev: parseUnsignedInput(
-                              forms.mapsTargetDev,
-                              "target device",
-                            ),
-                            spoofed_ino: parseUnsignedInput(
-                              forms.mapsSpoofedIno,
-                              "spoofed inode",
-                            ),
-                            spoofed_dev: parseUnsignedInput(
-                              forms.mapsSpoofedDev,
-                              "spoofed device",
-                            ),
-                            spoofed_pathname: spoofedPath,
-                          });
-                        },
-                        uiStore.L.hymofs?.mapsRuleAdded ??
-                          "Maps spoof rule added",
-                      )
+                      runAction(() => {
+                        const spoofedPath = forms.mapsPath.trim();
+                        if (!spoofedPath) {
+                          throw new Error(
+                            uiStore.L.hymofs?.mapsPathRequired ??
+                              "Spoofed path cannot be empty",
+                          );
+                        }
+                        return API.addHymofsMapsRule({
+                          target_ino: parseUnsignedInput(
+                            forms.mapsTargetIno,
+                            "target inode",
+                          ),
+                          target_dev: parseUnsignedInput(
+                            forms.mapsTargetDev,
+                            "target device",
+                          ),
+                          spoofed_ino: parseUnsignedInput(
+                            forms.mapsSpoofedIno,
+                            "spoofed inode",
+                          ),
+                          spoofed_dev: parseUnsignedInput(
+                            forms.mapsSpoofedDev,
+                            "spoofed device",
+                          ),
+                          spoofed_pathname: spoofedPath,
+                        });
+                      }, uiStore.L.hymofs?.mapsRuleAdded ?? "Maps spoof rule added")
                     }
                   >
                     {uiStore.L.hymofs?.mapsAddRule ?? "Add Maps Rule"}
@@ -797,7 +863,9 @@ export default function HymofsTab() {
             </div>
             <Show
               when={!loading()}
-              fallback={<Skeleton width="100%" height="120px" borderRadius="20px" />}
+              fallback={
+                <Skeleton width="100%" height="120px" borderRadius="20px" />
+              }
             >
               <div class="meta-list">
                 <div class="meta-row">
@@ -809,7 +877,9 @@ export default function HymofsTab() {
                   <strong>{config()?.hide_uids?.length ?? 0}</strong>
                 </div>
                 <div class="meta-row">
-                  <span>{uiStore.L.hymofs?.userHideCount ?? "User hide rules"}</span>
+                  <span>
+                    {uiStore.L.hymofs?.userHideCount ?? "User hide rules"}
+                  </span>
                   <strong>{status()?.user_hide_rule_count ?? 0}</strong>
                 </div>
                 <div class="meta-row">
@@ -817,7 +887,9 @@ export default function HymofsTab() {
                   <strong>{config()?.maps_rules?.length ?? 0}</strong>
                 </div>
                 <div class="meta-row">
-                  <span>{uiStore.L.hymofs?.kstatRuleCount ?? "Kstat rules"}</span>
+                  <span>
+                    {uiStore.L.hymofs?.kstatRuleCount ?? "Kstat rules"}
+                  </span>
                   <strong>{config()?.kstat_rules?.length ?? 0}</strong>
                 </div>
               </div>
@@ -848,9 +920,7 @@ export default function HymofsTab() {
               <div class="hymofs-card-title">
                 {uiStore.L.hymofs?.rulesTitle ?? "Active Rules"}
               </div>
-              <div class="hymofs-card-subtitle">
-                {rulesSummaryText()}
-              </div>
+              <div class="hymofs-card-subtitle">{rulesSummaryText()}</div>
             </div>
           </div>
           <Show

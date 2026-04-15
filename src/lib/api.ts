@@ -104,10 +104,7 @@ export interface AppAPI {
   clearHymofsMapsRules: () => Promise<void>;
   setHymofsHideUids: (uids: number[]) => Promise<void>;
   clearHymofsHideUids: () => Promise<void>;
-  setHymofsMountHide: (
-    enabled: boolean,
-    pathPattern?: string,
-  ) => Promise<void>;
+  setHymofsMountHide: (enabled: boolean, pathPattern?: string) => Promise<void>;
   setHymofsStatfsSpoof: (
     enabled: boolean,
     path?: string,
@@ -184,9 +181,7 @@ const RealAPI: AppAPI = {
       const cfg = await RealAPI.loadConfig();
       if (cfg.logfile) logPath = cfg.logfile;
     } catch {}
-    return runCommandExpectOk(
-      `cat "${shellEscapeDoubleQuoted(logPath)}"`,
-    );
+    return runCommandExpectOk(`cat "${shellEscapeDoubleQuoted(logPath)}"`);
   },
   saveModuleRules: async (
     moduleId: string,
@@ -276,9 +271,7 @@ const RealAPI: AppAPI = {
     return runJsonCommand<HymofsLkmStatus>(`${PATHS.BINARY} lkm status`);
   },
   isHymofsLkmLoaded: async (): Promise<boolean> => {
-    const { errno } = await runCommand(
-      "grep -q '^hymofs_lkm ' /proc/modules",
-    );
+    const { errno } = await runCommand("grep -q '^hymofs_lkm ' /proc/modules");
     return errno === 0;
   },
   setHymofsEnabled: async (enabled: boolean): Promise<void> => {
@@ -317,13 +310,15 @@ const RealAPI: AppAPI = {
     );
   },
   getOriginalKernelUname: async (): Promise<KernelUnameValues> => {
-    const releaseResult = await runCommand("cat /proc/sys/kernel/osrelease 2>/dev/null");
-    const versionResult = await runCommand("cat /proc/sys/kernel/version 2>/dev/null");
+    const releaseResult = await runCommand(
+      "cat /proc/sys/kernel/osrelease 2>/dev/null",
+    );
+    const versionResult = await runCommand(
+      "cat /proc/sys/kernel/version 2>/dev/null",
+    );
 
-    let release =
-      releaseResult.errno === 0 ? releaseResult.stdout.trim() : "";
-    let version =
-      versionResult.errno === 0 ? versionResult.stdout.trim() : "";
+    let release = releaseResult.errno === 0 ? releaseResult.stdout.trim() : "";
+    let version = versionResult.errno === 0 ? versionResult.stdout.trim() : "";
 
     if (!release || !version) {
       const procVersion = await runCommand("cat /proc/version 2>/dev/null");
@@ -365,7 +360,9 @@ const RealAPI: AppAPI = {
     if (!args.length) {
       throw new AppError("No uname fields provided");
     }
-    await runCommandExpectOk(`${PATHS.BINARY} hymofs uname set ${args.join(" ")}`);
+    await runCommandExpectOk(
+      `${PATHS.BINARY} hymofs uname set ${args.join(" ")}`,
+    );
   },
   clearHymofsUname: async (): Promise<void> => {
     await runCommandExpectOk(`${PATHS.BINARY} hymofs uname clear`);
@@ -478,9 +475,7 @@ const RealAPI: AppAPI = {
       return;
     }
     const safeUrl = shellEscapeDoubleQuoted(url);
-    await runCommand(
-      `am start -a android.intent.action.VIEW -d "${safeUrl}"`,
-    );
+    await runCommand(`am start -a android.intent.action.VIEW -d "${safeUrl}"`);
   },
   reboot: async (): Promise<void> => {
     await runCommand("reboot");

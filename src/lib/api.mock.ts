@@ -17,44 +17,170 @@ import type {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-let mockHymofsEnabled = false;
-let mockHymofsLkmLoaded = false;
-let mockHymofsLkmAutoload = true;
-let mockHymofsKmiOverride = "";
-let mockHymofsMirrorPath = "/dev/hymo_mirror";
-let mockHymofsStealth = true;
-let mockHymofsHideXattr = false;
-let mockHymofsKernelDebug = false;
-let mockHymofsIgnoreProtocolMismatch = false;
-let mockHymofsMapsSpoof = true;
-let mockHymofsCmdline = "androidboot.verifiedbootstate=green";
-let mockHymofsUnameRelease = "6.6.30-android15-gki";
-let mockHymofsUnameVersion = "#1 SMP PREEMPT";
-let mockOriginalKernelRelease = "6.6.30-android15-gki";
-let mockOriginalKernelVersion =
-  "#1 SMP PREEMPT Mon Apr 7 18:20:00 CST 2026";
-let mockHymofsUnameSysname = "";
-let mockHymofsUnameNodename = "";
-let mockHymofsUnameMachine = "";
-let mockHymofsUnameDomainname = "";
-let mockHymofsHideUids: number[] = [1000];
-let mockHymofsMapsRules = [
-  {
-    target_ino: 12345,
-    target_dev: 2049,
-    spoofed_ino: 54321,
-    spoofed_dev: 2050,
-    spoofed_pathname: "/system/bin/app_process64",
-  },
-];
-let mockHymofsMountHideEnabled = false;
-let mockHymofsMountHidePattern = "";
-let mockHymofsStatfsSpoofEnabled = false;
-let mockHymofsStatfsSpoofPath = "";
-let mockHymofsStatfsSpoofFType = 0;
-let mockUserHideRules = ["/data/adb/magisk"];
+const HYMOFS_LKM_DIR = "/data/adb/modules/hybrid_mount/hymofs_lkm";
+const HYMOFS_CURRENT_KMI = "android15-6.6";
+const HYMOFS_LKM_FILE =
+  "/data/adb/modules/hybrid_mount/hymofs_lkm/android15-6.6_arm64_hymofs_lkm.ko";
 
-export const MockAPI = {
+function createMockState() {
+  return {
+    hymofs: {
+      enabled: true,
+      lkmLoaded: true,
+      lkmAutoload: true,
+      kmiOverride: "",
+      mirrorPath: "/dev/hymo_mirror",
+      stealth: true,
+      hideXattr: false,
+      kernelDebug: false,
+      ignoreProtocolMismatch: false,
+      mapsSpoof: true,
+      cmdline: "androidboot.verifiedbootstate=green",
+      uname: {
+        sysname: "",
+        nodename: "",
+        release: "6.6.30-android15-gki",
+        version: "#1 SMP PREEMPT",
+        machine: "",
+        domainname: "",
+      },
+      originalKernel: {
+        release: "6.6.30-android15-gki",
+        version: "#1 SMP PREEMPT Mon Apr 7 18:20:00 CST 2026",
+      },
+      hideUids: [1000],
+      mapsRules: [
+        {
+          target_ino: 12345,
+          target_dev: 2049,
+          spoofed_ino: 54321,
+          spoofed_dev: 2050,
+          spoofed_pathname: "/system/bin/app_process64",
+        },
+      ],
+      mountHide: {
+        enabled: false,
+        pathPattern: "",
+      },
+      statfsSpoof: {
+        enabled: false,
+        path: "",
+        fType: 0,
+      },
+      userHideRules: ["/data/adb/magisk"],
+    },
+  };
+}
+
+const mockState = createMockState();
+
+function buildMockLkmStatus(): HymofsLkmStatus {
+  const { hymofs } = mockState;
+  return {
+    loaded: hymofs.lkmLoaded,
+    module_name: "hymofs_lkm",
+    autoload: hymofs.lkmAutoload,
+    kmi_override: hymofs.kmiOverride,
+    current_kmi: HYMOFS_CURRENT_KMI,
+    search_dir: HYMOFS_LKM_DIR,
+    module_file: hymofs.lkmLoaded ? HYMOFS_LKM_FILE : "",
+    last_error: null,
+  };
+}
+
+function buildMockHymofsConfig(enabled: boolean): HymofsStatus["config"] {
+  const { hymofs } = mockState;
+  return {
+    enabled,
+    ignore_protocol_mismatch: hymofs.ignoreProtocolMismatch,
+    lkm_autoload: hymofs.lkmAutoload,
+    lkm_dir: HYMOFS_LKM_DIR,
+    lkm_kmi_override: hymofs.kmiOverride,
+    mirror_path: hymofs.mirrorPath,
+    enable_kernel_debug: hymofs.kernelDebug,
+    enable_stealth: hymofs.stealth,
+    enable_hidexattr: hymofs.hideXattr,
+    enable_mount_hide: hymofs.mountHide.enabled,
+    enable_maps_spoof: hymofs.mapsSpoof,
+    enable_statfs_spoof: hymofs.statfsSpoof.enabled,
+    mount_hide: {
+      enabled: hymofs.mountHide.enabled,
+      path_pattern: hymofs.mountHide.pathPattern,
+    },
+    statfs_spoof: {
+      enabled: hymofs.statfsSpoof.enabled,
+      path: hymofs.statfsSpoof.path,
+      spoof_f_type: hymofs.statfsSpoof.fType,
+    },
+    hide_uids: [...hymofs.hideUids],
+    uname: { ...hymofs.uname },
+    uname_release: hymofs.uname.release,
+    uname_version: hymofs.uname.version,
+    cmdline_value: hymofs.cmdline,
+    kstat_rules: [],
+    maps_rules: hymofs.mapsRules.map((rule) => ({ ...rule })),
+  };
+}
+
+function buildMockHymofsStatus(): HymofsStatus {
+  const { hymofs } = mockState;
+  const lkm = buildMockLkmStatus();
+
+  if (!hymofs.enabled) {
+    return {
+      status: "disabled",
+      available: false,
+      protocol_version: null,
+      feature_bits: null,
+      feature_names: [],
+      hooks: [],
+      rule_count: 0,
+      user_hide_rule_count: hymofs.userHideRules.length,
+      mirror_path: hymofs.mirrorPath,
+      lkm,
+      config: buildMockHymofsConfig(false),
+      runtime: {
+        snapshot: {
+          status: "disabled",
+        },
+        hymofs_modules: [],
+      },
+    };
+  }
+
+  const available = hymofs.lkmLoaded;
+  return {
+    status: available ? "available" : "unavailable",
+    available,
+    protocol_version: available ? 14 : null,
+    feature_bits: available ? 487 : null,
+    feature_names: available
+      ? [
+          "kstat_spoof",
+          "uname_spoof",
+          "cmdline_spoof",
+          "merge_dir",
+          "mount_hide",
+          "maps_spoof",
+          "statfs_spoof",
+        ]
+      : [],
+    hooks: available ? ["d_path", "iterate_dir", "vfs_getattr"] : [],
+    rule_count: available ? 3 : 0,
+    user_hide_rule_count: hymofs.userHideRules.length,
+    mirror_path: hymofs.mirrorPath,
+    lkm,
+    config: buildMockHymofsConfig(true),
+    runtime: {
+      snapshot: {
+        status: available ? "enabled" : "unavailable",
+      },
+      hymofs_modules: available ? ["playintegrityfix"] : [],
+    },
+  };
+}
+
+export const MockAPI: AppAPI = {
   async loadConfig(): Promise<AppConfig> {
     await delay(300);
     return { ...DEFAULT_CONFIG };
@@ -166,151 +292,7 @@ export const MockAPI = {
   },
   async getHymofsStatus(): Promise<HymofsStatus> {
     await delay(300);
-    if (!mockHymofsEnabled) {
-      return {
-        status: "disabled",
-        available: false,
-        protocol_version: null,
-        feature_bits: null,
-        feature_names: [],
-        hooks: [],
-        rule_count: 0,
-        user_hide_rule_count: mockUserHideRules.length,
-        mirror_path: mockHymofsMirrorPath,
-        lkm: {
-          loaded: mockHymofsLkmLoaded,
-          module_name: "hymofs_lkm",
-          autoload: mockHymofsLkmAutoload,
-          kmi_override: mockHymofsKmiOverride,
-          current_kmi: "android15-6.6",
-          search_dir: "/data/adb/modules/hybrid_mount/hymofs_lkm",
-          module_file: mockHymofsLkmLoaded
-            ? "/data/adb/modules/hybrid_mount/hymofs_lkm/android15-6.6_arm64_hymofs_lkm.ko"
-            : "",
-          last_error: null,
-        },
-        config: {
-          enabled: false,
-          ignore_protocol_mismatch: mockHymofsIgnoreProtocolMismatch,
-          lkm_autoload: mockHymofsLkmAutoload,
-          lkm_dir: "/data/adb/modules/hybrid_mount/hymofs_lkm",
-          lkm_kmi_override: mockHymofsKmiOverride,
-          mirror_path: mockHymofsMirrorPath,
-          enable_kernel_debug: mockHymofsKernelDebug,
-          enable_stealth: mockHymofsStealth,
-          enable_hidexattr: mockHymofsHideXattr,
-          enable_mount_hide: mockHymofsMountHideEnabled,
-          enable_maps_spoof: mockHymofsMapsSpoof,
-          enable_statfs_spoof: mockHymofsStatfsSpoofEnabled,
-          mount_hide: {
-            enabled: mockHymofsMountHideEnabled,
-            path_pattern: mockHymofsMountHidePattern,
-          },
-          statfs_spoof: {
-            enabled: mockHymofsStatfsSpoofEnabled,
-            path: mockHymofsStatfsSpoofPath,
-            spoof_f_type: mockHymofsStatfsSpoofFType,
-          },
-          hide_uids: mockHymofsHideUids,
-          uname: {
-            sysname: mockHymofsUnameSysname,
-            nodename: mockHymofsUnameNodename,
-            release: mockHymofsUnameRelease,
-            version: mockHymofsUnameVersion,
-            machine: mockHymofsUnameMachine,
-            domainname: mockHymofsUnameDomainname,
-          },
-          uname_release: mockHymofsUnameRelease,
-          uname_version: mockHymofsUnameVersion,
-          cmdline_value: mockHymofsCmdline,
-          kstat_rules: [],
-          maps_rules: mockHymofsMapsRules,
-        },
-        runtime: {
-          snapshot: {
-            status: "disabled",
-          },
-          hymofs_modules: [],
-        },
-      };
-    }
-    const available = mockHymofsLkmLoaded;
-    return {
-      status: available ? "available" : "unavailable",
-      available,
-      protocol_version: available ? 14 : null,
-      feature_bits: available ? 487 : null,
-      feature_names: available
-        ? [
-            "kstat_spoof",
-            "uname_spoof",
-            "cmdline_spoof",
-            "merge_dir",
-            "mount_hide",
-            "maps_spoof",
-            "statfs_spoof",
-          ]
-        : [],
-      hooks: available ? ["d_path", "iterate_dir", "vfs_getattr"] : [],
-      rule_count: available ? 3 : 0,
-      user_hide_rule_count: mockUserHideRules.length,
-      mirror_path: "/dev/hymo_mirror",
-      lkm: {
-        loaded: mockHymofsLkmLoaded,
-        module_name: "hymofs_lkm",
-        autoload: mockHymofsLkmAutoload,
-        kmi_override: mockHymofsKmiOverride,
-        current_kmi: "android15-6.6",
-        search_dir: "/data/adb/modules/hybrid_mount/hymofs_lkm",
-        module_file: mockHymofsLkmLoaded
-          ? "/data/adb/modules/hybrid_mount/hymofs_lkm/android15-6.6_arm64_hymofs_lkm.ko"
-          : "",
-        last_error: null,
-      },
-      config: {
-        enabled: true,
-        ignore_protocol_mismatch: mockHymofsIgnoreProtocolMismatch,
-        lkm_autoload: mockHymofsLkmAutoload,
-        lkm_dir: "/data/adb/modules/hybrid_mount/hymofs_lkm",
-        lkm_kmi_override: mockHymofsKmiOverride,
-        mirror_path: mockHymofsMirrorPath,
-        enable_kernel_debug: mockHymofsKernelDebug,
-        enable_stealth: mockHymofsStealth,
-        enable_hidexattr: mockHymofsHideXattr,
-        enable_mount_hide: mockHymofsMountHideEnabled,
-        enable_maps_spoof: mockHymofsMapsSpoof,
-        enable_statfs_spoof: mockHymofsStatfsSpoofEnabled,
-        mount_hide: {
-          enabled: mockHymofsMountHideEnabled,
-          path_pattern: mockHymofsMountHidePattern,
-        },
-        statfs_spoof: {
-          enabled: mockHymofsStatfsSpoofEnabled,
-          path: mockHymofsStatfsSpoofPath,
-          spoof_f_type: mockHymofsStatfsSpoofFType,
-        },
-        hide_uids: mockHymofsHideUids,
-        uname: {
-          sysname: mockHymofsUnameSysname,
-          nodename: mockHymofsUnameNodename,
-          release: mockHymofsUnameRelease,
-          version: mockHymofsUnameVersion,
-          machine: mockHymofsUnameMachine,
-          domainname: mockHymofsUnameDomainname,
-        },
-        uname_release: mockHymofsUnameRelease,
-        uname_version: mockHymofsUnameVersion,
-        cmdline_value: mockHymofsCmdline,
-        kstat_rules: [],
-        maps_rules: mockHymofsMapsRules,
-      },
-      runtime: {
-        snapshot: {
-          status: available ? "enabled" : "unavailable",
-        },
-        hymofs_modules: available ? ["playintegrityfix"] : [],
-      },
-    };
+    return buildMockHymofsStatus();
   },
   async getHymofsRules(): Promise<HymofsRuleEntry[]> {
     await delay(180);
@@ -334,73 +316,69 @@ export const MockAPI = {
   },
   async getLkmStatus(): Promise<HymofsLkmStatus> {
     await delay(120);
-    return (await this.getHymofsStatus()).lkm;
+    return buildMockLkmStatus();
   },
   async isHymofsLkmLoaded(): Promise<boolean> {
     await delay(30);
-    return (await this.getHymofsStatus()).lkm.loaded;
+    return mockState.hymofs.lkmLoaded;
   },
   async setHymofsEnabled(enabled: boolean): Promise<void> {
     await delay(200);
-    mockHymofsEnabled = enabled;
+    mockState.hymofs.enabled = enabled;
   },
   async setHymofsStealth(enabled: boolean): Promise<void> {
     await delay(200);
-    mockHymofsStealth = enabled;
+    mockState.hymofs.stealth = enabled;
   },
   async setHymofsHidexattr(enabled: boolean): Promise<void> {
     await delay(200);
-    mockHymofsHideXattr = enabled;
+    mockState.hymofs.hideXattr = enabled;
   },
   async setHymofsIgnoreProtocolMismatch(enabled: boolean): Promise<void> {
     await delay(180);
-    mockHymofsIgnoreProtocolMismatch = enabled;
+    mockState.hymofs.ignoreProtocolMismatch = enabled;
   },
   async setHymofsMapsSpoof(enabled: boolean): Promise<void> {
     await delay(200);
-    mockHymofsMapsSpoof = enabled;
+    mockState.hymofs.mapsSpoof = enabled;
   },
   async setHymofsDebug(enabled: boolean): Promise<void> {
     await delay(200);
-    mockHymofsKernelDebug = enabled;
+    mockState.hymofs.kernelDebug = enabled;
   },
   async setHymofsMirror(path: string): Promise<void> {
     await delay(220);
-    mockHymofsMirrorPath = path;
+    mockState.hymofs.mirrorPath = path;
   },
   async getOriginalKernelUname(): Promise<KernelUnameValues> {
     await delay(120);
-    return {
-      release: mockOriginalKernelRelease,
-      version: mockOriginalKernelVersion,
-    };
+    return { ...mockState.hymofs.originalKernel };
   },
   async setHymofsUname(uname: Partial<HymofsUnameConfig>): Promise<void> {
     await delay(220);
-    if (uname.sysname !== undefined) mockHymofsUnameSysname = uname.sysname;
-    if (uname.nodename !== undefined) mockHymofsUnameNodename = uname.nodename;
-    if (uname.release !== undefined) mockHymofsUnameRelease = uname.release;
-    if (uname.version !== undefined) mockHymofsUnameVersion = uname.version;
-    if (uname.machine !== undefined) mockHymofsUnameMachine = uname.machine;
-    if (uname.domainname !== undefined)
-      mockHymofsUnameDomainname = uname.domainname;
+    mockState.hymofs.uname = {
+      ...mockState.hymofs.uname,
+      ...uname,
+    };
   },
   async clearHymofsUname(): Promise<void> {
     await delay(160);
-    mockHymofsUnameSysname = "";
-    mockHymofsUnameNodename = "";
-    mockHymofsUnameRelease = "";
-    mockHymofsUnameVersion = "";
-    mockHymofsUnameMachine = "";
-    mockHymofsUnameDomainname = "";
+    mockState.hymofs.uname = {
+      sysname: "",
+      nodename: "",
+      release: "",
+      version: "",
+      machine: "",
+      domainname: "",
+    };
   },
   async setHymofsCmdline(value: string): Promise<void> {
     await delay(220);
-    mockHymofsCmdline = value;
+    mockState.hymofs.cmdline = value;
   },
   async clearHymofsCmdline(): Promise<void> {
     await delay(160);
-    mockHymofsCmdline = "";
+    mockState.hymofs.cmdline = "";
   },
   async addHymofsMapsRule(rule): Promise<void> {
     await delay(180);
@@ -411,35 +389,36 @@ export const MockAPI = {
       spoofed_dev: Number(rule.spoofed_dev) || 0,
       spoofed_pathname: rule.spoofed_pathname || "",
     };
-    const deduped = mockHymofsMapsRules.filter(
+    mockState.hymofs.mapsRules = mockState.hymofs.mapsRules.filter(
       (item) =>
         !(
           item.target_ino === nextRule.target_ino &&
           item.target_dev === nextRule.target_dev
         ),
     );
-    deduped.push(nextRule);
-    mockHymofsMapsRules = deduped;
+    mockState.hymofs.mapsRules.push(nextRule);
   },
   async clearHymofsMapsRules(): Promise<void> {
     await delay(180);
-    mockHymofsMapsRules = [];
+    mockState.hymofs.mapsRules = [];
   },
   async setHymofsHideUids(uids: number[]): Promise<void> {
     await delay(180);
-    mockHymofsHideUids = [...uids];
+    mockState.hymofs.hideUids = [...uids];
   },
   async clearHymofsHideUids(): Promise<void> {
     await delay(160);
-    mockHymofsHideUids = [];
+    mockState.hymofs.hideUids = [];
   },
   async setHymofsMountHide(
     enabled: boolean,
     pathPattern?: string,
   ): Promise<void> {
     await delay(220);
-    mockHymofsMountHideEnabled = enabled;
-    mockHymofsMountHidePattern = enabled ? (pathPattern ?? "") : "";
+    mockState.hymofs.mountHide = {
+      enabled,
+      pathPattern: enabled ? (pathPattern ?? "") : "",
+    };
   },
   async setHymofsStatfsSpoof(
     enabled: boolean,
@@ -447,46 +426,53 @@ export const MockAPI = {
     fType?: number,
   ): Promise<void> {
     await delay(220);
-    mockHymofsStatfsSpoofEnabled = enabled;
-    mockHymofsStatfsSpoofPath = enabled ? (path ?? "") : "";
-    mockHymofsStatfsSpoofFType = enabled ? (fType ?? 0) : 0;
+    mockState.hymofs.statfsSpoof = {
+      enabled,
+      path: enabled ? (path ?? "") : "",
+      fType: enabled ? (fType ?? 0) : 0,
+    };
   },
   async getUserHideRules(): Promise<string[]> {
     await delay(120);
-    return [...mockUserHideRules];
+    return [...mockState.hymofs.userHideRules];
   },
   async addUserHideRule(path: string): Promise<void> {
     await delay(180);
-    if (!mockUserHideRules.includes(path)) {
-      mockUserHideRules = [path, ...mockUserHideRules];
+    if (!mockState.hymofs.userHideRules.includes(path)) {
+      mockState.hymofs.userHideRules = [
+        path,
+        ...mockState.hymofs.userHideRules,
+      ];
     }
   },
   async removeUserHideRule(path: string): Promise<void> {
     await delay(180);
-    mockUserHideRules = mockUserHideRules.filter((value) => value !== path);
+    mockState.hymofs.userHideRules = mockState.hymofs.userHideRules.filter(
+      (value) => value !== path,
+    );
   },
   async applyUserHideRules(): Promise<void> {
     await delay(180);
   },
   async loadHymofsLkm(): Promise<void> {
     await delay(260);
-    mockHymofsLkmLoaded = true;
+    mockState.hymofs.lkmLoaded = true;
   },
   async unloadHymofsLkm(): Promise<void> {
     await delay(260);
-    mockHymofsLkmLoaded = false;
+    mockState.hymofs.lkmLoaded = false;
   },
   async setHymofsLkmAutoload(enabled: boolean): Promise<void> {
     await delay(160);
-    mockHymofsLkmAutoload = enabled;
+    mockState.hymofs.lkmAutoload = enabled;
   },
   async setHymofsLkmKmi(value: string): Promise<void> {
     await delay(160);
-    mockHymofsKmiOverride = value;
+    mockState.hymofs.kmiOverride = value;
   },
   async clearHymofsLkmKmi(): Promise<void> {
     await delay(160);
-    mockHymofsKmiOverride = "";
+    mockState.hymofs.kmiOverride = "";
   },
   async fixHymofsMounts(): Promise<void> {
     await delay(220);
@@ -499,5 +485,21 @@ export const MockAPI = {
   },
   async invalidateHymofsCache(): Promise<void> {
     await delay(120);
+  },
+  async openLink(url: string): Promise<void> {
+    await delay(60);
+    window.open(url, "_blank", "noopener,noreferrer");
+  },
+  async reboot(): Promise<void> {
+    await delay(120);
+    console.log("[Mock] Reboot requested");
+  },
+  async readLogs(): Promise<string> {
+    await delay(80);
+    return [
+      "[Mock] hybrid-mount daemon started",
+      "[Mock] HymoFS ready",
+      "[Mock] Active tabs: status, config, hymofs, modules, info",
+    ].join("\n");
   },
 };

@@ -7,7 +7,11 @@ function clearCookie(name: string) {
 
 function triggerClick(node: Element) {
   node.dispatchEvent(
-    new MouseEvent("click", { bubbles: true, cancelable: true, composed: true }),
+    new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    }),
   );
 }
 
@@ -48,10 +52,11 @@ describe("ConfigTab", () => {
       uiStore: {
         showToast,
         L: {
-          common: { cancel: "Cancel" },
+          common: { cancel: "Cancel", saving: "Saving" },
           config: {
             invalidPath: "Invalid path detected",
             saveFailed: "Failed to save",
+            save: "Save",
             hymofsMasterSwitch: "Enable HymoFS",
             hymofsWarningTitle: "Enable Experimental HymoFS?",
             hymofsEnableConfirm: "Enable HymoFS",
@@ -130,12 +135,22 @@ describe("ConfigTab", () => {
   it("shows the warning dialog on first enable", async () => {
     const { container } = await renderConfigTab();
 
-    const switchEl = container.querySelector(
-      'md-switch[aria-label="Enable HymoFS"]',
+    const toggleButton = container.querySelector(
+      'button[aria-label="Enable HymoFS"]',
     );
-    expect(switchEl).not.toBeNull();
+    expect(toggleButton).not.toBeNull();
 
-    triggerClick(switchEl!);
+    triggerClick(toggleButton!);
+
+    const saveButton = Array.from(
+      container.querySelectorAll("md-filled-button"),
+    ).find((node) => node.textContent?.includes("Save"));
+    expect(saveButton).toBeDefined();
+    await waitFor(() => {
+      expect(saveButton?.hasAttribute("disabled")).toBe(false);
+    });
+
+    triggerClick(saveButton!);
 
     const dialogs = container.querySelectorAll("md-dialog");
     expect((dialogs[1] as { open?: boolean } | undefined)?.open).toBe(true);
@@ -144,11 +159,20 @@ describe("ConfigTab", () => {
   it("remembers the warning with a cookie and skips it next time", async () => {
     const renderResult = await renderConfigTab();
 
-    const firstSwitch = renderResult.container.querySelector(
-      'md-switch[aria-label="Enable HymoFS"]',
+    const firstToggle = renderResult.container.querySelector(
+      'button[aria-label="Enable HymoFS"]',
     );
-    expect(firstSwitch).not.toBeNull();
-    triggerClick(firstSwitch!);
+    expect(firstToggle).not.toBeNull();
+    triggerClick(firstToggle!);
+
+    const saveButton = Array.from(
+      renderResult.container.querySelectorAll("md-filled-button"),
+    ).find((node) => node.textContent?.includes("Save"));
+    expect(saveButton).toBeDefined();
+    await waitFor(() => {
+      expect(saveButton?.hasAttribute("disabled")).toBe(false);
+    });
+    triggerClick(saveButton!);
 
     const confirmButton = Array.from(
       renderResult.container.querySelectorAll("md-text-button"),
@@ -162,14 +186,32 @@ describe("ConfigTab", () => {
       expect(document.cookie).toContain(`${warningCookie}=1`);
     });
 
-    renderResult.setHymofsEnabled.mockClear();
-    triggerClick(firstSwitch!);
+    renderResult.unmount();
+    document.cookie = `${warningCookie}=1; Path=/`;
 
+    const secondRender = await renderConfigTab();
+    const secondToggle = secondRender.container.querySelector(
+      'button[aria-label="Enable HymoFS"]',
+    );
+    expect(secondToggle).not.toBeNull();
+    triggerClick(secondToggle!);
+
+    const secondSaveButton = Array.from(
+      secondRender.container.querySelectorAll("md-filled-button"),
+    ).find((node) => node.textContent?.includes("Save"));
+    expect(secondSaveButton).toBeDefined();
     await waitFor(() => {
-      expect(renderResult.setHymofsEnabled).toHaveBeenCalledWith(true);
+      expect(secondSaveButton?.hasAttribute("disabled")).toBe(false);
     });
 
-    const dialogs = renderResult.container.querySelectorAll("md-dialog");
+    secondRender.setHymofsEnabled.mockClear();
+    triggerClick(secondSaveButton!);
+
+    await waitFor(() => {
+      expect(secondRender.setHymofsEnabled).toHaveBeenCalledWith(true);
+    });
+
+    const dialogs = secondRender.container.querySelectorAll("md-dialog");
     expect((dialogs[1] as { open?: boolean } | undefined)?.open).toBe(false);
   });
 });

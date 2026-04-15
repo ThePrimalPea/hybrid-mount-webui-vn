@@ -83,7 +83,8 @@ describe("ModulesTab", () => {
             disableTag: "Disable",
             nativeTag: "Stealth",
             unavailableTag: "Unavailable",
-            hymofsUnavailableHint: "HymoFS is enabled but not currently available.",
+            hymofsUnavailableHint:
+              "HymoFS is enabled but not currently available.",
             modes: {
               overlay: "OverlayFS",
               magic: "Magic Mount",
@@ -174,9 +175,7 @@ describe("ModulesTab", () => {
     await fireEvent.click(header!);
 
     const strategyButtons = Array.from(
-      container.querySelectorAll(
-        ".strategy-selector .strategy-option",
-      ),
+      container.querySelectorAll(".strategy-selector .strategy-option"),
     ) as HTMLButtonElement[];
     const hymofsButton = strategyButtons.find((node) =>
       node.textContent?.includes("HymoFS"),

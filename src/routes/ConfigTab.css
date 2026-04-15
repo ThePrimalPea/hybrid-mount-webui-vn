@@ -84,12 +84,20 @@
 .option-tile.clickable {
   cursor: pointer;
 }
+.option-tile:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
 .option-tile.clickable:active {
   transform: scale(0.98);
+}
+.option-tile:disabled:active {
+  transform: none;
 }
 .tile-top {
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
   pointer-events: none;
 }
 .tile-icon {
@@ -118,6 +126,22 @@
   color: var(--md-sys-color-on-surface);
   line-height: 1.2;
   white-space: pre-line;
+}
+.tile-supporting-text {
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.4;
+}
+.tile-state {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+}
+.full-span {
+  grid-column: 1 / -1;
+}
+.option-tile.secondary.active .tile-state {
+  color: var(--md-sys-color-on-secondary-container);
 }
 .option-tile.static-input {
   background-color: var(--md-sys-color-surface-container);

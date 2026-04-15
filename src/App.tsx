@@ -160,8 +160,9 @@ export default function App() {
       moduleStore.ensureModulesLoaded(),
     ]);
 
-    const pendingRoutes = visibleRoutes().filter((route) => route.id !== activeTab());
-    let preloadTimer = 0;
+    const pendingRoutes = visibleRoutes().filter(
+      (route) => route.id !== activeTab(),
+    );
     let nextIndex = 0;
 
     const preloadNextRoute = () => {
