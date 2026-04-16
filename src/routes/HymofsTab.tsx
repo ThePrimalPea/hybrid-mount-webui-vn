@@ -1189,23 +1189,6 @@ export default function HymofsTab() {
             </svg>
           </md-icon>
         </md-filled-tonal-icon-button>
-        <md-filled-tonal-icon-button
-          disabled={pending()}
-          onClick={() =>
-            runAction(
-              () => API.fixHymofsMounts(),
-              uiStore.L.hymofs?.fixMounts ?? "Mounts fixed",
-            )
-          }
-          title={uiStore.L.hymofs?.fixMounts ?? "Fix Mounts"}
-        >
-          <md-icon>
-            <svg viewBox="0 0 24 24">
-              <path d={ICONS.mount_path} />
-            </svg>
-          </md-icon>
-        </md-filled-tonal-icon-button>
-
         <div class="spacer"></div>
 
         <md-filled-button
