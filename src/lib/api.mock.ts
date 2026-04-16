@@ -314,10 +314,6 @@ export const MockAPI: AppAPI = {
       },
     ];
   },
-  async getLkmStatus(): Promise<HymofsLkmStatus> {
-    await delay(120);
-    return buildMockLkmStatus();
-  },
   async isHymofsLkmLoaded(): Promise<boolean> {
     await delay(30);
     return mockState.hymofs.lkmLoaded;
@@ -338,17 +334,9 @@ export const MockAPI: AppAPI = {
     await delay(180);
     mockState.hymofs.ignoreProtocolMismatch = enabled;
   },
-  async setHymofsMapsSpoof(enabled: boolean): Promise<void> {
-    await delay(200);
-    mockState.hymofs.mapsSpoof = enabled;
-  },
   async setHymofsDebug(enabled: boolean): Promise<void> {
     await delay(200);
     mockState.hymofs.kernelDebug = enabled;
-  },
-  async setHymofsMirror(path: string): Promise<void> {
-    await delay(220);
-    mockState.hymofs.mirrorPath = path;
   },
   async getOriginalKernelUname(): Promise<KernelUnameValues> {
     await delay(120);
@@ -401,36 +389,6 @@ export const MockAPI: AppAPI = {
   async clearHymofsMapsRules(): Promise<void> {
     await delay(180);
     mockState.hymofs.mapsRules = [];
-  },
-  async setHymofsHideUids(uids: number[]): Promise<void> {
-    await delay(180);
-    mockState.hymofs.hideUids = [...uids];
-  },
-  async clearHymofsHideUids(): Promise<void> {
-    await delay(160);
-    mockState.hymofs.hideUids = [];
-  },
-  async setHymofsMountHide(
-    enabled: boolean,
-    pathPattern?: string,
-  ): Promise<void> {
-    await delay(220);
-    mockState.hymofs.mountHide = {
-      enabled,
-      pathPattern: enabled ? (pathPattern ?? "") : "",
-    };
-  },
-  async setHymofsStatfsSpoof(
-    enabled: boolean,
-    path?: string,
-    fType?: number,
-  ): Promise<void> {
-    await delay(220);
-    mockState.hymofs.statfsSpoof = {
-      enabled,
-      path: enabled ? (path ?? "") : "",
-      fType: enabled ? (fType ?? 0) : 0,
-    };
   },
   async getUserHideRules(): Promise<string[]> {
     await delay(120);

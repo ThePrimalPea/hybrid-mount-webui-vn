@@ -74,10 +74,10 @@ describe("HymofsTab", () => {
       version: "#1 SMP PREEMPT Mon Apr 7 18:20:00 CST 2026",
     });
     const showToast = vi.fn();
+    const status = createStatus();
 
     vi.doMock("../lib/api", () => ({
       API: {
-        getHymofsStatus: vi.fn().mockResolvedValue(createStatus()),
         getHymofsRules: vi.fn().mockResolvedValue([]),
         getUserHideRules: vi.fn().mockResolvedValue([]),
         getOriginalKernelUname,
@@ -98,6 +98,10 @@ describe("HymofsTab", () => {
 
     vi.doMock("../lib/stores/hymofsStore", () => ({
       hymofsStore: {
+        get status() {
+          return status;
+        },
+        loading: false,
         refreshStatus: vi.fn().mockResolvedValue(undefined),
       },
     }));

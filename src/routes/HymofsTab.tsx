@@ -52,7 +52,6 @@ function parseUnsignedInput(value: string, label: string) {
 }
 
 export default function HymofsTab() {
-  const [status, setStatus] = createSignal<HymofsStatus | null>(null);
   const [rules, setRules] = createSignal<HymofsRuleEntry[]>([]);
   const [userHideRules, setUserHideRules] = createSignal<string[]>([]);
   const [loading, setLoading] = createSignal(true);
@@ -99,13 +98,13 @@ export default function HymofsTab() {
   async function load() {
     setLoading(true);
     try {
-      const lkmLoaded = await API.isHymofsLkmLoaded();
       await hymofsStore.refreshStatus();
       const nextStatus = hymofsStore.status;
       const nextUserHideRules = await API.getUserHideRules();
-      const nextRules = lkmLoaded ? await API.getHymofsRules() : [];
+      const nextRules = nextStatus?.lkm?.loaded
+        ? await API.getHymofsRules()
+        : [];
       if (nextStatus) {
-        setStatus(nextStatus);
         syncForms(nextStatus);
       }
       setRules(nextRules);
@@ -125,7 +124,6 @@ export default function HymofsTab() {
     try {
       await action();
       await load();
-      await hymofsStore.refreshStatus();
       uiStore.showToast(success, "success");
     } catch (e: any) {
       uiStore.showToast(e?.message || "Action failed", "error");
@@ -161,6 +159,7 @@ export default function HymofsTab() {
     void load();
   });
 
+  const status = createMemo(() => hymofsStore.status);
   const config = createMemo(() => status()?.config);
   const lkm = createMemo(() => status()?.lkm);
   const activeModules = createMemo(

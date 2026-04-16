@@ -10,7 +10,6 @@ import type {
   ModuleRules,
   HymofsStatus,
   HymofsRuleEntry,
-  HymofsLkmStatus,
   HymofsUnameConfig,
   KernelUnameValues,
 } from "./types";
@@ -80,15 +79,12 @@ export interface AppAPI {
   getVersion: () => Promise<string>;
   getHymofsStatus: () => Promise<HymofsStatus>;
   getHymofsRules: () => Promise<HymofsRuleEntry[]>;
-  getLkmStatus: () => Promise<HymofsLkmStatus>;
   isHymofsLkmLoaded: () => Promise<boolean>;
   setHymofsEnabled: (enabled: boolean) => Promise<void>;
   setHymofsStealth: (enabled: boolean) => Promise<void>;
   setHymofsHidexattr: (enabled: boolean) => Promise<void>;
   setHymofsIgnoreProtocolMismatch: (enabled: boolean) => Promise<void>;
-  setHymofsMapsSpoof: (enabled: boolean) => Promise<void>;
   setHymofsDebug: (enabled: boolean) => Promise<void>;
-  setHymofsMirror: (path: string) => Promise<void>;
   getOriginalKernelUname: () => Promise<KernelUnameValues>;
   setHymofsUname: (uname: Partial<HymofsUnameConfig>) => Promise<void>;
   clearHymofsUname: () => Promise<void>;
@@ -102,14 +98,6 @@ export interface AppAPI {
     spoofed_pathname: string;
   }) => Promise<void>;
   clearHymofsMapsRules: () => Promise<void>;
-  setHymofsHideUids: (uids: number[]) => Promise<void>;
-  clearHymofsHideUids: () => Promise<void>;
-  setHymofsMountHide: (enabled: boolean, pathPattern?: string) => Promise<void>;
-  setHymofsStatfsSpoof: (
-    enabled: boolean,
-    path?: string,
-    fType?: number,
-  ) => Promise<void>;
   getUserHideRules: () => Promise<string[]>;
   addUserHideRule: (path: string) => Promise<void>;
   removeUserHideRule: (path: string) => Promise<void>;
@@ -267,9 +255,6 @@ const RealAPI: AppAPI = {
   getHymofsRules: async (): Promise<HymofsRuleEntry[]> => {
     return runJsonCommand<HymofsRuleEntry[]>(`${PATHS.BINARY} hymofs list`);
   },
-  getLkmStatus: async (): Promise<HymofsLkmStatus> => {
-    return runJsonCommand<HymofsLkmStatus>(`${PATHS.BINARY} lkm status`);
-  },
   isHymofsLkmLoaded: async (): Promise<boolean> => {
     const { errno } = await runCommand("grep -q '^hymofs_lkm ' /proc/modules");
     return errno === 0;
@@ -294,19 +279,9 @@ const RealAPI: AppAPI = {
       `${PATHS.BINARY} hymofs ignore-protocol ${enabled ? "on" : "off"}`,
     );
   },
-  setHymofsMapsSpoof: async (enabled: boolean): Promise<void> => {
-    await runCommandExpectOk(
-      `${PATHS.BINARY} hymofs maps-spoof ${enabled ? "on" : "off"}`,
-    );
-  },
   setHymofsDebug: async (enabled: boolean): Promise<void> => {
     await runCommandExpectOk(
       `${PATHS.BINARY} hymofs debug ${enabled ? "on" : "off"}`,
-    );
-  },
-  setHymofsMirror: async (path: string): Promise<void> => {
-    await runCommandExpectOk(
-      `${PATHS.BINARY} hymofs set-mirror "${shellEscapeDoubleQuoted(path)}"`,
     );
   },
   getOriginalKernelUname: async (): Promise<KernelUnameValues> => {
@@ -382,45 +357,6 @@ const RealAPI: AppAPI = {
   },
   clearHymofsMapsRules: async (): Promise<void> => {
     await runCommandExpectOk(`${PATHS.BINARY} hymofs maps clear`);
-  },
-  setHymofsHideUids: async (uids: number[]): Promise<void> => {
-    if (!uids.length) {
-      throw new AppError("No UIDs provided");
-    }
-    await runCommandExpectOk(
-      `${PATHS.BINARY} hymofs hide-uids set ${uids.join(" ")}`,
-    );
-  },
-  clearHymofsHideUids: async (): Promise<void> => {
-    await runCommandExpectOk(`${PATHS.BINARY} hymofs hide-uids clear`);
-  },
-  setHymofsMountHide: async (
-    enabled: boolean,
-    pathPattern?: string,
-  ): Promise<void> => {
-    const args = [
-      `${PATHS.BINARY} hymofs mount-hide ${enabled ? "on" : "off"}`,
-    ];
-    if (pathPattern) {
-      args.push(`--path-pattern "${shellEscapeDoubleQuoted(pathPattern)}"`);
-    }
-    await runCommandExpectOk(args.join(" "));
-  },
-  setHymofsStatfsSpoof: async (
-    enabled: boolean,
-    path?: string,
-    fType?: number,
-  ): Promise<void> => {
-    const args = [
-      `${PATHS.BINARY} hymofs statfs-spoof ${enabled ? "on" : "off"}`,
-    ];
-    if (path) {
-      args.push(`--path "${shellEscapeDoubleQuoted(path)}"`);
-    }
-    if (fType !== undefined) {
-      args.push(`--f-type ${fType}`);
-    }
-    await runCommandExpectOk(args.join(" "));
   },
   getUserHideRules: async (): Promise<string[]> => {
     return runJsonCommand<string[]>(`${PATHS.BINARY} hide list`);
